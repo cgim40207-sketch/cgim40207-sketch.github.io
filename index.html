@@ -1,4 +1,4 @@
-<DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
@@ -98,7 +98,7 @@
     background:rgba(255,255,255,0.96); color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
     cursor:pointer; box-shadow:var(--shadow-sm);
   }
-  .card-kebab:hover{ color:var(--danger); border-color:var(--danger-soft); background:var(--danger-soft); }
+  .card-kebab:hover{ color:var(--blue-deep); border-color:var(--blue); background:var(--blue-soft); }
   .card-kebab svg{ width:14px; height:14px; }
   .note-name-input{
     border:none; background:transparent; font-size:13px; color:var(--ink-soft); text-align:center; padding:4px 4px;
@@ -153,7 +153,7 @@
   #editorTopbar .right-cluster{ display:flex; align-items:center; gap:2px; flex:none; }
  
   #styleRow{
-    display:none; align-items:center; gap:14px; padding:8px 16px; border-bottom:1px solid var(--line-soft); flex:none;
+    display:none; align-items:center; gap:14px; padding:8px 16px; border-bottom:1px solid var(--line-soft); flex:none; overflow-x:auto;
   }
   #styleRow.visible{ display:flex; }
   .swatch-row{ display:flex; align-items:center; gap:6px; }
@@ -162,20 +162,30 @@
   #customColorInput{ width:22px; height:22px; border:none; padding:0; background:none; cursor:pointer; border-radius:50%; }
   #customColorInput::-webkit-color-swatch-wrapper{ padding:0; }
   #customColorInput::-webkit-color-swatch{ border:2px solid var(--line-soft); border-radius:50%; }
-  .width-row{ display:flex; align-items:center; gap:5px; }
-  .width-btn{ width:28px; height:28px; background:transparent; border:1px solid transparent; border-radius:8px; color:var(--ink-soft); cursor:pointer; display:flex; align-items:center; justify-content:center; }
-  .width-btn:hover{ background:var(--bg); }
-  .width-btn.active{ background:var(--bg); border-color:var(--line-soft); }
-  .width-btn .dot{ border-radius:50%; background:currentColor; }
+  .width-slider-wrap{ display:flex; align-items:center; gap:8px; }
+  #widthSlider{
+    -webkit-appearance:none; appearance:none; width:120px; height:20px; background:transparent; cursor:pointer; margin:0;
+  }
+  #widthSlider::-webkit-slider-runnable-track{ height:2px; background:var(--line); border-radius:2px; }
+  #widthSlider::-webkit-slider-thumb{
+    -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--paper);
+    border:2.5px solid var(--blue); margin-top:-8px; box-shadow:var(--shadow-sm);
+  }
+  #widthSlider::-moz-range-track{ height:2px; background:var(--line); border-radius:2px; }
+  #widthSlider::-moz-range-thumb{
+    width:18px; height:18px; border-radius:50%; background:var(--paper); border:2.5px solid var(--blue); box-shadow:var(--shadow-sm);
+  }
+  #widthValue{ font-size:11.5px; font-weight:600; color:var(--ink-soft); min-width:30px; }
   .style-divider{ width:1px; height:18px; background:var(--line-soft); }
  
-  #canvasArea{ flex:1; overflow:auto; padding:24px; padding-bottom:64px; display:flex; justify-content:center; background:var(--bg); position:relative; }
-  #canvasWrap{ width:min(860px, 100%); flex:none; }
+  #canvasArea{ flex:1; overflow:auto; padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px; background:var(--bg); position:relative; }
+  #canvasWrap{ width:min(860px, 100%); flex:none; transform-origin: top center; }
   .page-surface{
     position:relative; width:100%; aspect-ratio:1240/1754; background-color:var(--paper);
     border-radius:var(--radius); border:2px solid var(--line);
     box-shadow:var(--shadow); overflow:hidden; touch-action:none;
   }
+  .page-surface.pan-mode{ touch-action: pan-x pan-y; }
   #ink-canvas, #overlay-canvas{ position:absolute; inset:0; width:100%; height:100%; }
   #overlay-canvas{ pointer-events:none; }
   #brushCursor{
@@ -189,9 +199,9 @@
  
   /* ---------- Page navigator ---------- */
   #pageNav{
-    position:absolute; bottom:16px; left:50%; transform:translateX(-50%); display:flex; align-items:center; gap:2px;
-    background:var(--paper); border:1.5px solid var(--line-soft); border-radius:999px; padding:5px; box-shadow:var(--shadow);
-    z-index:8;
+    flex:none; display:flex; align-items:center; gap:2px;
+    background:var(--paper); border:1.5px solid var(--line-soft); border-radius:999px; padding:5px; box-shadow:var(--shadow-sm);
+    margin-bottom:8px;
   }
   #pageIndicator{ font-size:12px; font-weight:600; color:var(--ink-soft); padding:0 8px; white-space:nowrap; min-width:80px; text-align:center; }
   .pagenav-divider{ width:1px; height:20px; background:var(--line-soft); margin:0 3px; flex:none; }
@@ -208,31 +218,13 @@
   #spotlightInput{ flex:1; border:none; outline:none; font-size:15px; background:transparent; }
   #spotlightBody{ overflow-y:auto; padding:14px 16px 20px; }
  
-  .spotlight-actions{ display:flex; gap:8px; flex-wrap:wrap; margin-bottom:6px; }
-  .spotlight-action{
-    display:flex; align-items:center; gap:8px; border:1.5px solid var(--line-soft); background:var(--paper);
-    padding:9px 13px; border-radius:12px; font-size:12.5px; font-weight:600; color:var(--ink); cursor:pointer;
-  }
-  .spotlight-action:hover{ border-color:var(--blue); color:var(--blue-deep); background:var(--blue-soft); }
-  .spotlight-action:disabled{ opacity:.5; cursor:default; }
-  .spotlight-action.loading svg{ animation:spin 1s linear infinite; }
-  @keyframes spin{ to{ transform:rotate(360deg); } }
- 
   .spotlight-section-title{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); margin:16px 0 8px; }
   .spotlight-result{ background:var(--bg); border-radius:12px; padding:11px 12px; font-size:13px; line-height:1.55; white-space:pre-wrap; max-height:200px; overflow-y:auto; }
   .spotlight-result.empty{ color:var(--ink-faint); font-style:italic; }
-  .spotlight-error{ font-size:12px; color:var(--danger); margin-top:8px; }
-  .spotlight-stale{ font-size:11px; color:var(--blue-deep); margin:6px 0; }
-  .tag-row{ display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
-  .tag-chip{ background:var(--blue-soft); color:var(--blue-deep); font-size:11.5px; font-weight:600; padding:4px 9px; border-radius:999px; }
-  .bullet-list{ margin:8px 0 0; padding-left:18px; font-size:13px; line-height:1.6; }
-  .spotlight-inline-actions{ display:flex; gap:6px; margin-top:8px; }
-  .spotlight-inline-actions button{ font-size:11.5px; padding:5px 10px; }
  
   .search-hit{ padding:9px 10px; border-radius:10px; cursor:pointer; margin-top:6px; border:1px solid var(--line-soft); }
   .search-hit:hover{ border-color:var(--blue); background:var(--blue-soft); }
   .search-hit .sh-title{ font-weight:600; font-size:12.5px; }
-  .search-hit .sh-reason{ font-size:11.5px; color:var(--ink-soft); margin-top:2px; }
  
   /* ---------- Modal ---------- */
   #modalOverlay{ position:fixed; inset:0; background:rgba(21,23,28,0.32); display:none; align-items:center; justify-content:center; z-index:120; }
@@ -366,7 +358,12 @@
       <div class="swatch-row" id="swatchRow"></div>
       <input type="color" id="customColorInput" title="Custom color" value="#15171C" />
       <div class="style-divider"></div>
-      <div class="width-row" id="widthRow"></div>
+      <div class="width-slider-wrap">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:12px;height:12px;flex:none;color:var(--ink-faint);"><circle cx="12" cy="12" r="2"/></svg>
+        <input type="range" id="widthSlider" min="1" max="14" step="0.5" value="4" />
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:18px;height:18px;flex:none;color:var(--ink-faint);"><circle cx="12" cy="12" r="5"/></svg>
+        <span id="widthValue">4px</span>
+      </div>
     </div>
  
     <div id="canvasArea">
@@ -399,53 +396,21 @@
  
 </div>
  
-<!-- ============================= Spotlight ============================= -->
+<!-- ============================= Spotlight (search) ============================= -->
 <div id="spotlightOverlay">
   <div id="spotlightBox">
     <div class="spotlight-search-row">
       <svg class="mag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input id="spotlightInput" type="text" placeholder="Search notes, or ask Fly AI…" />
+      <input id="spotlightInput" type="text" placeholder="Search your notes…" />
       <button class="icon-btn" id="spotlightCloseBtn">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
       </button>
     </div>
     <div id="spotlightBody">
-      <div class="spotlight-actions" id="spotlightActionsRow">
-        <button class="spotlight-action" id="spTranscribeBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/></svg>
-          Transcribe this page
-        </button>
-        <button class="spotlight-action" id="spOrganizeBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3v4M12 17v4M3 12h4M17 12h4M6 6l2.5 2.5M15.5 15.5L18 18M18 6l-2.5 2.5M8.5 15.5L6 18"/></svg>
-          Summarize &amp; tag
-        </button>
-      </div>
-      <div id="spTranscribeArea" style="display:none;">
-        <div class="spotlight-section-title">Transcript</div>
-        <div class="spotlight-stale" id="spStale" style="display:none;">This page changed since it was last transcribed.</div>
-        <div class="spotlight-result" id="spTranscribeResult"></div>
-        <div class="spotlight-inline-actions">
-          <button class="outline-btn" id="spCopyBtn">Copy text</button>
-        </div>
-      </div>
-      <div class="spotlight-error" id="spTranscribeError"></div>
- 
-      <div id="spOrganizeArea" style="display:none;">
-        <div class="spotlight-section-title">Summary</div>
-        <div class="spotlight-result" id="spSummaryText"></div>
-        <ul class="bullet-list" id="spBullets"></ul>
-        <div class="tag-row" id="spTags"></div>
-      </div>
-      <div class="spotlight-error" id="spOrganizeError"></div>
- 
       <div id="spSearchResultsWrap" style="display:none;">
-        <div class="spotlight-section-title">Results</div>
-        <div class="spotlight-inline-actions" style="margin-top:-4px; margin-bottom:8px;">
-          <button class="outline-btn" id="spAiSearchBtn">Ask AI to rank these</button>
-        </div>
         <div id="spSearchResults"></div>
-        <div class="spotlight-error" id="spSearchError"></div>
       </div>
+      <div class="spotlight-result empty" id="spSearchHint">Start typing to search note names.</div>
     </div>
   </div>
 </div>
@@ -458,7 +423,7 @@
     <label class="switch"><input type="checkbox" id="touchDrawToggle" /><span class="track"></span></label>
   </div>
   <div style="font-size:11px; color:var(--ink-faint); line-height:1.4; margin-top:-4px; margin-bottom:4px;">
-    Turns off for your fingers once a stylus is detected, so your palm won't leave marks.
+    Off by default on touch devices. When off, one finger pans the page and two fingers pinch to zoom, instead of drawing.
   </div>
   <div class="settings-divider"></div>
   <button id="clearDataBtn">Erase all Fly Notes data</button>
@@ -479,11 +444,13 @@ document.getElementById('editorLogoBadge').innerHTML = BIRD_SVG;
  
 /* ============================= Constants ============================= */
 const PAGE_W = 1240, PAGE_H = 1754;
-const COLORS = ['#15171C','#1FA9E0','#FFC24B','#2FAE66','#E15353','#8A5CF6'];
-const PEN_WIDTHS = [2, 4, 7];
-const BRUSH_WIDTHS = [6, 10, 16];
-const HILITE_WIDTHS = [14, 22, 32];
-const ERASER_WIDTHS = [12, 24, 44];
+const COLORS = ['#000000','#7F7F7F','#880015','#ED1C24','#FF7F27','#FFF200','#22B14C','#00A2E8','#3F48CC','#A349A4'];
+const WIDTH_RANGES = {
+  pen: { min: 1, max: 14 },
+  paintbrush: { min: 3, max: 28 },
+  highlighter: { min: 8, max: 44 },
+  eraser: { min: 8, max: 60 }
+};
 const TEMPLATES = [
   { id: 'blank', label: 'Blank' },
   { id: 'dots', label: 'Dots' },
@@ -492,6 +459,8 @@ const TEMPLATES = [
   { id: 'legal', label: 'Legal' },
   { id: 'column', label: 'Column' }
 ];
+const IS_TOUCH_DEVICE = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+function defaultSettings(){ return { touchDraw: !IS_TOUCH_DEVICE }; }
  
 /* ============================= State ============================= */
 let state = null;
@@ -500,21 +469,21 @@ let currentPageId = null;
 const redoStacks = {};
 let currentTool = 'pen';
 const toolConfigs = {
-  pen: { color: COLORS[0], width: PEN_WIDTHS[1] },
-  paintbrush: { color: COLORS[1], width: BRUSH_WIDTHS[1], opacity: 0.92 },
-  highlighter: { color: COLORS[2], width: HILITE_WIDTHS[1], opacity: 0.35 },
-  eraser: { width: ERASER_WIDTHS[1] }
+  pen: { color: '#000000', width: 4 },
+  paintbrush: { color: '#00A2E8', width: 10, opacity: 0.92 },
+  highlighter: { color: '#FFF200', width: 22, opacity: 0.35 },
+  eraser: { width: 24 }
 };
  
 function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
  
-function freshPage(){ return { id: uid(), strokes: [], transcript: null, transcriptStale: false, summary: null }; }
+function freshPage(){ return { id: uid(), strokes: [] }; }
 function freshNote(name, template){
   const t = Date.now();
   return { id: uid(), name: name || 'Untitled note', template: template || 'dots', pages: [freshPage()], createdAt: t, updatedAt: t };
 }
 function defaultState(){
-  return { version: 3, notes: [freshNote('Getting started', 'dots')], settings: { touchDraw: true } };
+  return { version: 3, notes: [freshNote('Getting started', 'dots')], settings: defaultSettings() };
 }
 function migrate(loaded){
   if(loaded && Array.isArray(loaded.notes) && loaded.notes.length && Array.isArray(loaded.notes[0].pages)){
@@ -524,40 +493,70 @@ function migrate(loaded){
   if(loaded && Array.isArray(loaded.notes)){
     const notes = loaded.notes.map(n => ({
       id: n.id || uid(), name: n.name || 'Untitled note', template: 'dots',
-      pages: [{ id: uid(), strokes: n.strokes || [], transcript: n.transcript || null, transcriptStale: !!n.transcriptStale, summary: n.summary || null }],
+      pages: [{ id: uid(), strokes: n.strokes || [] }],
       createdAt: n.createdAt || Date.now(), updatedAt: n.updatedAt || Date.now()
     }));
-    return { version: 3, notes: notes.length ? notes : [freshNote()], settings: (loaded.settings && typeof loaded.settings.touchDraw === 'boolean') ? loaded.settings : { touchDraw: true } };
+    return { version: 3, notes: notes.length ? notes : [freshNote()], settings: (loaded.settings && typeof loaded.settings.touchDraw === 'boolean') ? loaded.settings : defaultSettings() };
   }
   if(loaded && Array.isArray(loaded.pages)){
     const notes = loaded.pages.map(p => ({
       id: p.id || uid(), name: p.name || 'Untitled note', template: 'dots',
-      pages: [{ id: uid(), strokes: p.strokes || [], transcript: p.transcript || null, transcriptStale: !!p.transcriptStale, summary: p.summary || null }],
+      pages: [{ id: uid(), strokes: p.strokes || [] }],
       createdAt: Date.now(), updatedAt: Date.now()
     }));
-    return { version: 3, notes: notes.length ? notes : [freshNote()], settings: { touchDraw: true } };
+    return { version: 3, notes: notes.length ? notes : [freshNote()], settings: defaultSettings() };
   }
   return defaultState();
 }
  
 /* ============================= Storage ============================= */
+/* Primary: window.storage (persists via Claude's artifact storage).
+   Fallback: localStorage (works when this file is opened directly in a
+   browser, or if window.storage has a transient failure). Every save
+   writes to both when possible so a switch between contexts doesn't
+   silently lose data. */
+const LOCAL_KEY_PREFIX = 'flynotes:';
+function hasWindowStorage(){ return !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function'); }
+async function storageGet(key){
+  if(hasWindowStorage()){
+    try{
+      const res = await window.storage.get(key, false);
+      if(res && typeof res.value === 'string') return res.value;
+    }catch(e){ console.warn('window.storage.get failed, trying localStorage', e); }
+  }
+  try{ const v = localStorage.getItem(LOCAL_KEY_PREFIX + key); if(v !== null) return v; }catch(e){ console.warn('localStorage.getItem failed', e); }
+  return null;
+}
+async function storageSet(key, value){
+  let ok = false;
+  if(hasWindowStorage()){
+    for(let attempt = 0; attempt < 2; attempt++){
+      try{ await window.storage.set(key, value, false); ok = true; break; }
+      catch(e){ console.warn('window.storage.set failed (attempt ' + (attempt+1) + ')', e); await new Promise(r => setTimeout(r, 300)); }
+    }
+  }
+  try{ localStorage.setItem(LOCAL_KEY_PREFIX + key, value); ok = true; }
+  catch(e){ console.warn('localStorage.setItem failed', e); }
+  return ok;
+}
 let saveTimer = null;
 function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 500); }
 async function saveState(){
   try{
     const json = JSON.stringify(state);
     if(json.length > 4.5 * 1024 * 1024) showToast('Your notes are getting large — consider deleting old ones.', 'error');
-    await window.storage.set('state', json, false);
+    const ok = await storageSet('state', json);
+    if(!ok) showToast('Could not save your changes.', 'error');
   }catch(e){ console.error('save failed', e); showToast('Could not save your changes.', 'error'); }
 }
 async function loadState(){
   try{
-    const res = await window.storage.get('state', false);
-    if(res && res.value){
-      state = migrate(JSON.parse(res.value));
-      if(!state.settings) state.settings = { touchDraw: true };
+    const raw = await storageGet('state');
+    if(raw){
+      state = migrate(JSON.parse(raw));
+      if(!state.settings) state.settings = defaultSettings();
     } else { state = defaultState(); await saveState(); }
-  }catch(e){ state = defaultState(); await saveState(); }
+  }catch(e){ console.error('load failed', e); state = defaultState(); await saveState(); }
 }
  
 /* ============================= Helpers ============================= */
@@ -566,10 +565,6 @@ function getCurrentNote(){ return currentNoteId ? getNote(currentNoteId) : null;
 function currentPage(){
   const note = getCurrentNote(); if(!note) return null;
   return note.pages.find(p => p.id === currentPageId) || note.pages[0] || null;
-}
-function findPageOwner(pageId){
-  for(const n of state.notes){ const p = n.pages.find(pg => pg.id === pageId); if(p) return { note: n, page: p }; }
-  return null;
 }
  
 function showToast(msg, type){
@@ -639,6 +634,8 @@ document.addEventListener('click', (e) => {
   if(!settingsPopover.contains(e.target) && !document.getElementById('settingsBtn').contains(e.target)) settingsPopover.classList.remove('open');
 });
 const TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/></svg>';
+const KEBAB_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>';
+const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
  
 /* ============================= Canvas engine ============================= */
 const inkCanvas = document.getElementById('ink-canvas');
@@ -648,7 +645,7 @@ const overlayCtx = overlayCanvas.getContext('2d');
 const brushCursor = document.getElementById('brushCursor');
 const emptyHint = document.getElementById('emptyHint');
  
-let drawing = false, activePointerId = null, currentPts = [], penEverUsed = false;
+let drawing = false, activePointerId = null, currentPts = [];
  
 function setCanvasSize(){
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -658,41 +655,146 @@ function setCanvasSize(){
 }
 window.addEventListener('resize', () => { if(currentPage()){ setCanvasSize(); redrawCurrentPage(); } });
  
+/* ---- Touch mode: when finger-drawing is off, a finger pans/zooms instead of drawing ---- */
+const canvasWrapEl = document.getElementById('canvasWrap');
+const canvasAreaEl = document.getElementById('canvasArea');
+let viewZoom = 1;
+const MIN_ZOOM = 0.5, MAX_ZOOM = 3;
+const activeGestureTouches = new Map();
+let pinchState = null;
+ 
+function updateTouchActionMode(){
+  document.getElementById('pageSurface').classList.toggle('pan-mode', !state.settings.touchDraw);
+}
+function applyZoom(){ canvasWrapEl.style.transform = viewZoom === 1 ? '' : `scale(${viewZoom})`; }
+function resetZoom(){
+  viewZoom = 1;
+  canvasWrapEl.style.transformOrigin = 'top center';
+  applyZoom();
+}
+function gestureTouchDist(map){
+  const pts = Array.from(map.values());
+  return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
+}
+canvasAreaEl.addEventListener('pointerdown', (e) => {
+  if(e.pointerType !== 'touch' || state.settings.touchDraw) return;
+  activeGestureTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if(activeGestureTouches.size === 2){
+    const pts = Array.from(activeGestureTouches.values());
+    const midX = (pts[0].x + pts[1].x) / 2, midY = (pts[0].y + pts[1].y) / 2;
+    const rect = canvasWrapEl.getBoundingClientRect();
+    const originX = rect.width ? ((midX - rect.left) / rect.width) * 100 : 50;
+    const originY = rect.height ? ((midY - rect.top) / rect.height) * 100 : 0;
+    canvasWrapEl.style.transformOrigin = `${originX}% ${originY}%`;
+    pinchState = { initialDist: gestureTouchDist(activeGestureTouches), initialZoom: viewZoom };
+  }
+});
+canvasAreaEl.addEventListener('pointermove', (e) => {
+  if(e.pointerType !== 'touch' || !activeGestureTouches.has(e.pointerId)) return;
+  activeGestureTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
+  if(activeGestureTouches.size === 2 && pinchState && pinchState.initialDist > 0){
+    const dist = gestureTouchDist(activeGestureTouches);
+    viewZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pinchState.initialZoom * (dist / pinchState.initialDist)));
+    applyZoom();
+  }
+});
+function endGestureTouch(e){
+  if(e.pointerType !== 'touch') return;
+  activeGestureTouches.delete(e.pointerId);
+  if(activeGestureTouches.size < 2) pinchState = null;
+}
+canvasAreaEl.addEventListener('pointerup', endGestureTouch);
+canvasAreaEl.addEventListener('pointercancel', endGestureTouch);
+ 
 function widthFromPressure(base, p, tool){
   const pr = p > 0 ? p : 0.5;
   if(tool === 'paintbrush') return Math.max(1, base * (0.15 + pr * 1.9));
   return Math.max(1, base * (0.4 + pr * 1.2));
 }
  
+const scratchCanvas = document.createElement('canvas');
+const scratchCtx = scratchCanvas.getContext('2d');
+ 
+function strokeBBox(pts, pad){
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for(let i = 0; i < pts.length; i += 3){
+    if(pts[i] < minX) minX = pts[i];
+    if(pts[i] > maxX) maxX = pts[i];
+    if(pts[i+1] < minY) minY = pts[i+1];
+    if(pts[i+1] > maxY) maxY = pts[i+1];
+  }
+  return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
+}
+ 
+function paintStrokeShape(ctx, stroke, offsetX, offsetY){
+  const { tool, color, width, pts } = stroke;
+  const n = pts.length / 3;
+  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+  ctx.strokeStyle = color; ctx.fillStyle = color;
+  if(n === 1){
+    const r = tool === 'highlighter' ? width / 2 : widthFromPressure(width, pts[2], tool) / 2;
+    ctx.beginPath(); ctx.arc(pts[0] - offsetX, pts[1] - offsetY, Math.max(r, 0.6), 0, Math.PI * 2); ctx.fill();
+    return;
+  }
+  for(let i = 0; i < n - 1; i++){
+    const x1 = pts[i*3] - offsetX, y1 = pts[i*3+1] - offsetY, p1 = pts[i*3+2];
+    const x2 = pts[(i+1)*3] - offsetX, y2 = pts[(i+1)*3+1] - offsetY, p2 = pts[(i+1)*3+2];
+    const w = tool === 'highlighter' ? width : widthFromPressure(width, (p1+p2)/2, tool);
+    ctx.lineWidth = w;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  }
+}
+ 
 function drawStroke(ctx, stroke){
-  const { tool, color, opacity, width, pts } = stroke;
+  const { tool, opacity, width, pts } = stroke;
   if(!pts || pts.length < 3) return;
   const n = pts.length / 3;
-  ctx.save();
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+ 
   if(tool === 'eraser'){
+    // destination-out at full alpha is binary (a pixel is either erased or not), so
+    // overlapping segments never double up visually — safe to draw segment-by-segment.
+    ctx.save();
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
     ctx.globalCompositeOperation = 'destination-out';
     ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(0,0,0,1)'; ctx.fillStyle = 'rgba(0,0,0,1)';
-  } else {
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = opacity != null ? opacity : 1;
-    ctx.strokeStyle = color; ctx.fillStyle = color;
-  }
-  if(n === 1){
-    let r;
-    if(tool === 'highlighter') r = width / 2;
-    else if(tool === 'eraser') r = width * 1.1;
-    else r = widthFromPressure(width, pts[2], tool) / 2;
-    ctx.beginPath(); ctx.arc(pts[0], pts[1], Math.max(r, 0.6), 0, Math.PI * 2); ctx.fill();
-  } else {
-    for(let i = 0; i < n - 1; i++){
-      const x1 = pts[i*3], y1 = pts[i*3+1], p1 = pts[i*3+2];
-      const x2 = pts[(i+1)*3], y2 = pts[(i+1)*3+1], p2 = pts[(i+1)*3+2];
-      const w = tool === 'highlighter' ? width : (tool === 'eraser' ? width * 2.2 : widthFromPressure(width, (p1+p2)/2, tool));
-      ctx.lineWidth = w;
-      ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    if(n === 1){
+      ctx.beginPath(); ctx.arc(pts[0], pts[1], Math.max(width * 1.1, 0.6), 0, Math.PI * 2); ctx.fill();
+    } else {
+      for(let i = 0; i < n - 1; i++){
+        ctx.lineWidth = width * 2.2;
+        ctx.beginPath(); ctx.moveTo(pts[i*3], pts[i*3+1]); ctx.lineTo(pts[(i+1)*3], pts[(i+1)*3+1]); ctx.stroke();
+      }
     }
+    ctx.restore();
+    return;
   }
+ 
+  const op = opacity != null ? opacity : 1;
+  if(op >= 0.999 || n === 1){
+    // fully opaque, or a single dot: no overlapping translucent joins possible, draw directly.
+    ctx.save();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = op;
+    paintStrokeShape(ctx, stroke, 0, 0);
+    ctx.restore();
+    return;
+  }
+ 
+  // Translucent multi-segment stroke (highlighter, soft paintbrush): paint it fully opaque
+  // onto a small offscreen buffer sized to the stroke's bounding box, then composite that
+  // buffer onto the destination ONCE at the target opacity. This avoids the "beaded" look
+  // that comes from alpha-blending many overlapping round-capped segments individually.
+  const pad = width * 1.3 + 4;
+  const bbox = strokeBBox(pts, pad);
+  const bw = Math.max(1, Math.ceil(bbox.maxX - bbox.minX));
+  const bh = Math.max(1, Math.ceil(bbox.maxY - bbox.minY));
+  scratchCanvas.width = bw; scratchCanvas.height = bh;
+  scratchCtx.clearRect(0, 0, bw, bh);
+  paintStrokeShape(scratchCtx, stroke, bbox.minX, bbox.minY);
+  ctx.save();
+  ctx.globalCompositeOperation = 'source-over';
+  ctx.globalAlpha = op;
+  ctx.drawImage(scratchCanvas, bbox.minX, bbox.minY);
   ctx.restore();
 }
  
@@ -737,15 +839,16 @@ function updateBrushCursor(clientX, clientY, visible){
   brushCursor.style.left = (clientX - rect.left) + 'px'; brushCursor.style.top = (clientY - rect.top) + 'px';
   brushCursor.style.borderColor = currentTool === 'eraser' ? 'var(--ink-soft)' : cfg.color;
 }
-function invalidateTranscript(page){
-  if(page.transcript){ page.transcriptStale = true; if(page.id === currentPageId) syncSpotlightStale(); }
-}
- 
 inkCanvas.addEventListener('pointerdown', (e) => {
   if(!currentPage()) return;
-  if(e.pointerType === 'touch' && penEverUsed && !state.settings.touchDraw) return;
+  if(e.pointerType === 'touch' && !state.settings.touchDraw) return;
   if(activePointerId !== null) return;
-  if(e.pointerType === 'pen') penEverUsed = true;
+  if(e.pointerType === 'pen' && state.settings.touchDraw){
+    state.settings.touchDraw = false;
+    updateTouchActionMode();
+    scheduleSave();
+    showToast('Switched off touch drawing since a stylus was detected.');
+  }
   e.preventDefault();
   try{ inkCanvas.setPointerCapture(e.pointerId); }catch(err){}
   activePointerId = e.pointerId; drawing = true;
@@ -788,7 +891,6 @@ function endStroke(e){
     page.strokes.push(stroke);
     redoStacks[page.id] = [];
     const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
-    invalidateTranscript(page);
     emptyHint.style.display = 'none';
     scheduleSave();
     updateUndoRedoButtons();
@@ -803,7 +905,7 @@ function undo(){
   const page = currentPage(); if(!page || !page.strokes.length) return;
   const stroke = page.strokes.pop();
   (redoStacks[page.id] = redoStacks[page.id] || []).push(stroke);
-  redrawCurrentPage(); invalidateTranscript(page);
+  redrawCurrentPage();
   const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
   scheduleSave(); updateUndoRedoButtons();
 }
@@ -811,7 +913,7 @@ function redo(){
   const page = currentPage(); if(!page) return;
   const stack = redoStacks[page.id]; if(!stack || !stack.length) return;
   page.strokes.push(stack.pop());
-  redrawCurrentPage(); invalidateTranscript(page);
+  redrawCurrentPage();
   const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
   scheduleSave(); updateUndoRedoButtons();
 }
@@ -832,7 +934,7 @@ document.getElementById('clearPageBtn').addEventListener('click', () => {
       redoStacks[page.id] = page.strokes.slice().reverse();
       page.strokes = [];
       const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
-      redrawCurrentPage(); invalidateTranscript(page); scheduleSave(); updateUndoRedoButtons();
+      redrawCurrentPage(); scheduleSave(); updateUndoRedoButtons();
     }
   });
 });
@@ -869,15 +971,26 @@ function renderNoteCard(note){
   img.src = renderThumbnail(note, 300, Math.round(300 * PAGE_H / PAGE_W));
   card.appendChild(img);
   const kebab = document.createElement('button'); kebab.className = 'card-kebab'; kebab.type = 'button';
-  kebab.title = 'Delete note';
-  kebab.innerHTML = TRASH_ICON;
+  kebab.title = 'Note options';
+  kebab.innerHTML = KEBAB_ICON;
   kebab.addEventListener('click', (e) => {
     e.stopPropagation();
-    openConfirmModal({
-      title: 'Delete note?', danger: true, confirmLabel: 'Delete',
-      message: `"${note.name}" will be permanently deleted.`,
-      onConfirm: () => deleteNote(note)
-    });
+    openItemMenu(kebab, [
+      { label: 'Add page', icon: PLUS_ICON, onClick: () => {
+        const pg = freshPage();
+        note.pages.push(pg);
+        note.updatedAt = Date.now();
+        scheduleSave();
+        showToast('Page added to "' + note.name + '".', 'success');
+      }},
+      { label: 'Delete note', icon: TRASH_ICON, danger: true, onClick: () => {
+        openConfirmModal({
+          title: 'Delete note?', danger: true, confirmLabel: 'Delete',
+          message: `"${note.name}" will be permanently deleted.`,
+          onConfirm: () => deleteNote(note)
+        });
+      }}
+    ]);
   });
   card.appendChild(kebab);
   card.addEventListener('click', () => openEditor(note.id));
@@ -914,13 +1027,14 @@ function openEditor(noteId, pageId){
   currentPageId = pageId || (note.pages[0] && note.pages[0].id);
   showView('editor');
   document.getElementById('pageSurface').className = 'page-surface tpl-' + (note.template || 'dots');
+  updateTouchActionMode();
+  resetZoom();
   setCanvasSize();
   redrawCurrentPage();
   document.getElementById('noteTitle').textContent = note.name;
   updateUndoRedoButtons();
   updatePageNavUI();
   setActiveTool(currentTool);
-  syncSpotlightStale();
 }
 document.getElementById('newNoteBtn').addEventListener('click', createNote);
 document.getElementById('emptyNewNoteBtn').addEventListener('click', createNote);
@@ -957,7 +1071,7 @@ function goToPage(delta){
   const newIdx = idx + delta;
   if(newIdx < 0 || newIdx >= note.pages.length) return;
   currentPageId = note.pages[newIdx].id;
-  setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); syncSpotlightStale(); syncSpotlightCache();
+  resetZoom(); setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI();
 }
 document.getElementById('prevPageBtn').addEventListener('click', () => goToPage(-1));
 document.getElementById('nextPageBtn').addEventListener('click', () => goToPage(1));
@@ -968,7 +1082,7 @@ document.getElementById('addPageBtn').addEventListener('click', () => {
   note.pages.splice(idx + 1, 0, pg);
   currentPageId = pg.id;
   note.updatedAt = Date.now();
-  setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); scheduleSave(); syncSpotlightStale(); syncSpotlightCache();
+  resetZoom(); setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); scheduleSave();
 });
 document.getElementById('deletePageBtn').addEventListener('click', () => {
   const note = getCurrentNote(); if(!note || note.pages.length <= 1) return;
@@ -981,7 +1095,7 @@ document.getElementById('deletePageBtn').addEventListener('click', () => {
       note.pages.splice(idx, 1);
       currentPageId = note.pages[Math.max(0, idx - 1)].id;
       note.updatedAt = Date.now();
-      setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); scheduleSave(); syncSpotlightStale(); syncSpotlightCache();
+      resetZoom(); setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); scheduleSave();
     }
   });
 });
@@ -997,7 +1111,6 @@ document.querySelectorAll('.tool-btn').forEach(btn => btn.addEventListener('clic
 function renderStyleRow(){
   const row = document.getElementById('styleRow');
   const swatchRow = document.getElementById('swatchRow');
-  const widthRow = document.getElementById('widthRow');
   const colorInputWrap = document.getElementById('customColorInput');
   row.classList.add('visible');
   const showColor = currentTool === 'pen' || currentTool === 'paintbrush' || currentTool === 'highlighter';
@@ -1015,18 +1128,16 @@ function renderStyleRow(){
       swatchRow.appendChild(b);
     });
   }
-  widthRow.innerHTML = '';
-  const widths = currentTool === 'highlighter' ? HILITE_WIDTHS : currentTool === 'eraser' ? ERASER_WIDTHS : currentTool === 'paintbrush' ? BRUSH_WIDTHS : PEN_WIDTHS;
-  const sizes = [7, 11, 16];
-  widths.forEach((w,i) => {
-    const b = document.createElement('button');
-    b.className = 'width-btn' + (toolConfigs[currentTool].width === w ? ' active' : '');
-    const dot = document.createElement('span'); dot.className = 'dot'; dot.style.width = sizes[i]+'px'; dot.style.height = sizes[i]+'px';
-    b.appendChild(dot); b.title = ['Thin','Medium','Thick'][i];
-    b.addEventListener('click', () => { toolConfigs[currentTool].width = w; renderStyleRow(); });
-    widthRow.appendChild(b);
-  });
+  const range = WIDTH_RANGES[currentTool];
+  const slider = document.getElementById('widthSlider');
+  slider.min = range.min; slider.max = range.max; slider.step = 0.5;
+  slider.value = toolConfigs[currentTool].width;
+  document.getElementById('widthValue').textContent = Math.round(toolConfigs[currentTool].width) + 'px';
 }
+document.getElementById('widthSlider').addEventListener('input', (e) => {
+  toolConfigs[currentTool].width = parseFloat(e.target.value);
+  document.getElementById('widthValue').textContent = Math.round(toolConfigs[currentTool].width) + 'px';
+});
 document.getElementById('customColorInput').addEventListener('input', (e) => {
   if(currentTool === 'pen' || currentTool === 'paintbrush' || currentTool === 'highlighter'){
     toolConfigs[currentTool].color = e.target.value; renderStyleRow();
@@ -1042,7 +1153,7 @@ document.getElementById('settingsBtn').addEventListener('click', (e) => {
   settingsPopover.style.left = Math.max(8, Math.min(r.left - 150, window.innerWidth - 240)) + 'px';
   settingsPopover.classList.toggle('open');
 });
-document.getElementById('touchDrawToggle').addEventListener('change', (e) => { state.settings.touchDraw = e.target.checked; scheduleSave(); });
+document.getElementById('touchDrawToggle').addEventListener('change', (e) => { state.settings.touchDraw = e.target.checked; updateTouchActionMode(); scheduleSave(); });
 document.getElementById('clearDataBtn').addEventListener('click', () => {
   settingsPopover.classList.remove('open');
   openConfirmModal({
@@ -1057,15 +1168,13 @@ document.getElementById('clearDataBtn').addEventListener('click', () => {
   });
 });
  
-/* ============================= Spotlight (AI) ============================= */
+/* ============================= Spotlight (search) ============================= */
 const spotlightOverlay = document.getElementById('spotlightOverlay');
 function openSpotlight(){
   if(!currentPage()) return;
   spotlightOverlay.classList.add('open');
   document.getElementById('spotlightInput').value = '';
   clearSpotlightSearch();
-  syncSpotlightStale();
-  syncSpotlightCache();
   setTimeout(() => document.getElementById('spotlightInput').focus(), 30);
 }
 function closeSpotlight(){ spotlightOverlay.classList.remove('open'); }
@@ -1086,115 +1195,21 @@ document.addEventListener('keydown', (e) => {
   else if(e.key === '4') setActiveTool('eraser');
 });
  
-function syncSpotlightStale(){
-  const page = currentPage();
-  document.getElementById('spStale').style.display = (page && page.transcriptStale && page.transcript) ? 'block' : 'none';
+function clearSpotlightSearch(){
+  document.getElementById('spSearchResultsWrap').style.display = 'none';
+  document.getElementById('spSearchResults').innerHTML = '';
+  document.getElementById('spSearchHint').style.display = 'block';
 }
-function syncSpotlightCache(){
-  const page = currentPage();
-  const tArea = document.getElementById('spTranscribeArea');
-  if(page && page.transcript){ tArea.style.display = 'block'; document.getElementById('spTranscribeResult').textContent = page.transcript; }
-  else { tArea.style.display = 'none'; }
-  const oArea = document.getElementById('spOrganizeArea');
-  if(page && page.summary){
-    oArea.style.display = 'block';
-    document.getElementById('spSummaryText').textContent = page.summary.summary || '';
-    const bullets = document.getElementById('spBullets'); bullets.innerHTML = '';
-    (page.summary.bullets || []).forEach(b => { const li = document.createElement('li'); li.textContent = b; bullets.appendChild(li); });
-    const tags = document.getElementById('spTags'); tags.innerHTML = '';
-    (page.summary.tags || []).forEach(t => { const chip = document.createElement('span'); chip.className = 'tag-chip'; chip.textContent = t; tags.appendChild(chip); });
-  } else { oArea.style.display = 'none'; }
-}
-function clearSpotlightSearch(){ document.getElementById('spSearchResultsWrap').style.display = 'none'; document.getElementById('spSearchResults').innerHTML = ''; document.getElementById('spSearchError').textContent = ''; }
- 
-async function callClaude(messages, maxTokens){
-  const res = await fetch('https://api.anthropic.com/v1/messages', {
-    method: 'POST', headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: maxTokens || 1000, messages })
-  });
-  if(!res.ok) throw new Error('AI request failed (' + res.status + ')');
-  const data = await res.json();
-  return (data.content || []).map(b => b.text || '').join('\n').trim();
-}
-function safeParseJSON(text){
-  let t = (text || '').trim();
-  t = t.replace(/^```json\s*/i,'').replace(/^```\s*/,'').replace(/```$/,'').trim();
-  try{ return JSON.parse(t); }catch(e){
-    const m = t.match(/\{[\s\S]*\}/);
-    if(m){ try{ return JSON.parse(m[0]); }catch(e2){} }
-    return null;
-  }
-}
-function pageImageDataURL(page){
-  const off = document.createElement('canvas'); off.width = PAGE_W; off.height = PAGE_H;
-  const octx = off.getContext('2d');
-  octx.fillStyle = '#fff'; octx.fillRect(0,0,PAGE_W,PAGE_H);
-  page.strokes.forEach(s => drawStroke(octx, s));
-  return off.toDataURL('image/png').split(',')[1];
-}
-function setActionLoading(btn, loading, idleText){
-  btn.disabled = loading; btn.classList.toggle('loading', loading);
-  const textNode = btn.lastChild;
-  if(textNode) textNode.textContent = loading ? ' Thinking…' : ' ' + idleText;
-}
- 
-document.getElementById('spTranscribeBtn').addEventListener('click', async () => {
-  const page = currentPage(); if(!page) return;
-  const btn = document.getElementById('spTranscribeBtn');
-  const errEl = document.getElementById('spTranscribeError'); errEl.textContent = '';
-  if(!page.strokes.length){ showToast('This page is blank — nothing to transcribe yet.'); return; }
-  setActionLoading(btn, true, 'Transcribe this page');
-  try{
-    const img = pageImageDataURL(page);
-    const text = await callClaude([{ role:'user', content:[
-      { type:'image', source:{ type:'base64', media_type:'image/png', data: img } },
-      { type:'text', text:'Transcribe all handwritten text in this note page image into clean plain text. Preserve line breaks and rough structure (use "- " for bullet lists). If the page has no legible text, respond with exactly: [blank page]. Output only the transcription, nothing else.' }
-    ]}], 1200);
-    page.transcript = text || '[blank page]'; page.transcriptStale = false;
-    scheduleSave(); syncSpotlightCache(); syncSpotlightStale();
-  }catch(e){ console.error(e); errEl.textContent = 'Could not transcribe this page. Please try again.'; }
-  finally{ setActionLoading(btn, false, 'Transcribe this page'); }
-});
-document.getElementById('spCopyBtn').addEventListener('click', async () => {
-  const page = currentPage(); if(!page || !page.transcript) return;
-  try{ await navigator.clipboard.writeText(page.transcript); showToast('Transcript copied.', 'success'); }
-  catch(e){ showToast('Could not copy — select the text manually.', 'error'); }
-});
-document.getElementById('spOrganizeBtn').addEventListener('click', async () => {
-  const page = currentPage(); if(!page) return;
-  const btn = document.getElementById('spOrganizeBtn');
-  const errEl = document.getElementById('spOrganizeError'); errEl.textContent = '';
-  if(!page.strokes.length){ showToast('This page is blank — nothing to summarize yet.'); return; }
-  setActionLoading(btn, true, 'Summarize & tag');
-  try{
-    if(!page.transcript || page.transcriptStale){
-      const img = pageImageDataURL(page);
-      const text = await callClaude([{ role:'user', content:[
-        { type:'image', source:{ type:'base64', media_type:'image/png', data: img } },
-        { type:'text', text:'Transcribe all handwritten text in this note page image into clean plain text. If blank, respond with exactly: [blank page]. Output only the transcription.' }
-      ]}], 1200);
-      page.transcript = text || '[blank page]'; page.transcriptStale = false;
-    }
-    const summaryText = await callClaude([{ role:'user', content:
-      `Here are handwritten notes:\n\n"""\n${page.transcript}\n"""\n\nRespond with ONLY valid JSON (no markdown fences, no commentary) in this exact shape: {"summary":"one short paragraph summarizing the notes","bullets":["key point 1","key point 2","key point 3"],"tags":["short-tag-1","short-tag-2","short-tag-3"]}`
-    }], 700);
-    const parsed = safeParseJSON(summaryText);
-    if(!parsed) throw new Error('bad json');
-    page.summary = parsed; scheduleSave(); syncSpotlightCache();
-  }catch(e){ console.error(e); errEl.textContent = 'Could not organize this page. Please try again.'; }
-  finally{ setActionLoading(btn, false, 'Summarize & tag'); }
-});
- 
 function renderSearchHits(items){
+  document.getElementById('spSearchHint').style.display = 'none';
   const box = document.getElementById('spSearchResults');
   document.getElementById('spSearchResultsWrap').style.display = 'block';
   box.innerHTML = '';
   if(!items.length){ const e = document.createElement('div'); e.className = 'spotlight-result empty'; e.textContent = 'No matches found.'; box.appendChild(e); return; }
   items.forEach(it => {
     const row = document.createElement('div'); row.className = 'search-hit';
-    row.innerHTML = `<div class="sh-title"></div>${it.reason ? '<div class="sh-reason"></div>' : ''}`;
+    row.innerHTML = `<div class="sh-title"></div>`;
     row.querySelector('.sh-title').textContent = it.label;
-    if(it.reason) row.querySelector('.sh-reason').textContent = it.reason;
     row.addEventListener('click', () => { closeSpotlight(); openEditor(it.noteId, it.pageId); });
     box.appendChild(row);
   });
@@ -1206,44 +1221,9 @@ function allPagesFlat(){
 }
 document.getElementById('spotlightInput').addEventListener('input', (e) => {
   const q = e.target.value.trim().toLowerCase();
-  document.getElementById('spSearchError').textContent = '';
-  const searching = !!q;
-  document.getElementById('spotlightActionsRow').style.display = searching ? 'none' : 'flex';
-  if(searching){
-    document.getElementById('spTranscribeArea').style.display = 'none';
-    document.getElementById('spOrganizeArea').style.display = 'none';
-    document.getElementById('spStale').style.display = 'none';
-    const matches = allPagesFlat().filter(it => (it.note.name || '').toLowerCase().includes(q) || (it.page.transcript && it.page.transcript.toLowerCase().includes(q)));
-    renderSearchHits(matches.map(it => ({ noteId: it.note.id, pageId: it.page.id, label: it.note.name + (it.note.pages.length > 1 ? ' — page ' + (it.index+1) : '') })));
-  } else {
-    clearSpotlightSearch();
-    syncSpotlightCache();
-    syncSpotlightStale();
-  }
-});
-document.getElementById('spAiSearchBtn').addEventListener('click', async () => {
-  const q = document.getElementById('spotlightInput').value.trim();
-  const errEl = document.getElementById('spSearchError'); errEl.textContent = '';
-  if(!q){ showToast('Type something to search for.'); return; }
-  const candidates = allPagesFlat().filter(it => it.page.transcript && it.page.transcript !== '[blank page]');
-  if(!candidates.length){ errEl.textContent = 'Transcribe a few pages first so AI search has something to look through.'; return; }
-  const btn = document.getElementById('spAiSearchBtn'); btn.disabled = true; const orig = btn.textContent; btn.textContent = 'Asking AI…';
-  try{
-    const payload = candidates.map(it => ({ id: it.page.id, title: it.note.name + (it.note.pages.length > 1 ? ' (page ' + (it.index+1) + ')' : ''), text: (it.page.transcript || '').slice(0,600) }));
-    const resultText = await callClaude([{ role:'user', content:
-      `Search query: "${q}"\n\nNotes (JSON array of {id,title,text}):\n${JSON.stringify(payload)}\n\nReturn the ids of notes relevant to the query, ranked most to least relevant, each with a short one-sentence reason. Respond with ONLY valid JSON in this exact shape: {"results":[{"id":"...","reason":"..."}]}. If none are relevant, return {"results":[]}.`
-    }], 900);
-    const parsed = safeParseJSON(resultText);
-    if(!parsed || !Array.isArray(parsed.results)) throw new Error('bad json');
-    const items = parsed.results.map(r => {
-      const owner = findPageOwner(r.id);
-      if(!owner) return null;
-      const idx = owner.note.pages.findIndex(p => p.id === r.id);
-      return { noteId: owner.note.id, pageId: owner.page.id, reason: r.reason, label: owner.note.name + (owner.note.pages.length > 1 ? ' — page ' + (idx+1) : '') };
-    }).filter(Boolean);
-    renderSearchHits(items);
-  }catch(e){ console.error(e); errEl.textContent = 'AI search failed. Please try again.'; }
-  finally{ btn.disabled = false; btn.textContent = orig; }
+  if(!q){ clearSpotlightSearch(); return; }
+  const matches = allPagesFlat().filter(it => (it.note.name || '').toLowerCase().includes(q));
+  renderSearchHits(matches.map(it => ({ noteId: it.note.id, pageId: it.page.id, label: it.note.name + (it.note.pages.length > 1 ? ' — page ' + (it.index+1) : '') })));
 });
  
 /* ============================= Init ============================= */
@@ -1259,4 +1239,3 @@ init();
 </script>
 </body>
 </html>
- 
