@@ -1,1541 +1,1049 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ko">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no" />
-<title>Fly Notes</title>
-<link rel="manifest" href="./manifest.webmanifest" />
-<meta name="theme-color" content="#1FA9E0" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="default" />
-<meta name="apple-mobile-web-app-title" content="Fly Notes" />
-<link rel="apple-touch-icon" href="./icon-192.png" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>My Rollercoaster</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=Caveat:wght@500;700&family=Playfair+Display:wght@500;700&display=swap');
- 
-  :root{
-    --ink:#15171C;
-    --ink-soft:#5B6270;
-    --ink-faint:#9AA0AC;
-    --paper:#FFFFFF;
-    --bg:#F5F7FA;
-    --line:#15171C;
-    --line-soft:#DEE3EA;
-    --blue:#1FA9E0;
-    --blue-deep:#1487B5;
-    --blue-soft:#E4F6FC;
-    --amber:#FFC24B;
-    --danger:#E15353;
-    --danger-soft:#FDE8E8;
-    --green:#2FAE66;
-    --radius:16px;
-    --radius-lg:22px;
-    --shadow:0 10px 30px rgba(21,23,28,0.10);
-    --shadow-sm:0 2px 10px rgba(21,23,28,0.06);
-    --font-display:'Space Grotesk', sans-serif;
-    --font-body:'Inter', system-ui, sans-serif;
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #cfe3f5; font-family: -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif; }
+  canvas { display: block; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+  #hud {
+    position: fixed; left: calc(16px + env(safe-area-inset-left)); bottom: calc(16px + env(safe-area-inset-bottom)); padding: 10px 14px; border-radius: 10px;
+    background: rgba(20, 18, 14, .5); color: #fff; font-size: 13px; line-height: 1.5;
+    backdrop-filter: blur(6px); pointer-events: none; user-select: none; font-variant-numeric: tabular-nums;
   }
- 
-  *{ box-sizing:border-box; }
-  html,body{ height:100%; }
-  body{
-    margin:0; font-family:var(--font-body); color:var(--ink); background:var(--bg);
-    overflow:hidden; -webkit-tap-highlight-color:transparent;
+  #hud b { font-size: 26px; font-weight: 700; letter-spacing: -.5px; }
+  #hud small { opacity: .75; }
+  #mapTag { position: fixed; right: calc(16px + env(safe-area-inset-right)); top: calc(14px + env(safe-area-inset-top)); padding: 6px 12px; border-radius: 999px; background: rgba(20,18,14,.45); color: #fff; font-size: 12px; letter-spacing: 1px; pointer-events: none; }
+  #overlay {
+    position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    background: rgba(20, 24, 30, .6); color: #fff; text-align: center; user-select: none; padding: 20px; box-sizing: border-box;
+    overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
-  button, input{ font-family:inherit; }
-  :focus-visible{ outline:2px solid var(--blue); outline-offset:2px; border-radius:6px; }
- 
-  #app{ height:100vh; width:100vw; position:relative; }
- 
-  .logo-badge{
-    width:38px; height:38px; border-radius:11px; border:2px solid var(--line); background:var(--paper);
-    display:flex; align-items:center; justify-content:center; flex:none;
+  /* 터치 조작 버튼 */
+  #touch {
+    position: fixed; right: calc(12px + env(safe-area-inset-right)); bottom: calc(12px + env(safe-area-inset-bottom));
+    display: flex; gap: 8px; z-index: 5; user-select: none; -webkit-user-select: none;
   }
-  .logo-badge svg{ width:26px; height:17px; }
-  .logo-badge.sm{ width:32px; height:32px; border-radius:9px; }
-  .logo-badge.sm svg{ width:22px; height:14px; }
-  .wordmark{ font-family:var(--font-display); font-weight:700; font-size:19px; letter-spacing:-0.01em; }
- 
-  /* ---------- Buttons ---------- */
-  .outline-btn{
-    display:inline-flex; align-items:center; gap:6px; border:2px solid var(--line); background:var(--paper);
-    color:var(--ink); font-weight:600; font-size:13.5px; padding:8px 14px; border-radius:999px; cursor:pointer;
+  #touch.hidden { display: none; }
+  #touch button {
+    appearance: none; -webkit-appearance: none; border: 0; margin: 0; cursor: pointer; touch-action: manipulation;
+    min-width: 54px; height: 54px; padding: 0 12px; border-radius: 14px; background: rgba(20,18,14,.55); color: #fff;
+    font: 700 13px/1.15 -apple-system, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); box-shadow: 0 2px 10px rgba(0,0,0,.25);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px;
   }
-  .outline-btn:hover{ background:var(--bg); }
-  .outline-btn svg{ width:15px; height:15px; }
-  .fill-btn{
-    display:inline-flex; align-items:center; gap:7px; border:none; background:var(--ink); color:#fff;
-    font-weight:600; font-size:13.5px; padding:9px 15px; border-radius:999px; cursor:pointer;
+  #touch button span { font-size: 18px; line-height: 1; }
+  #touch button:active { background: rgba(200,16,46,.75); transform: scale(.96); }
+  #touch button.primary { background: rgba(200,16,46,.85); min-width: 64px; }
+  /* 작은 화면 / 가로 모드 */
+  @media (max-width: 640px) {
+    #hud { bottom: calc(76px + env(safe-area-inset-bottom)); }
+    #touch { left: calc(10px + env(safe-area-inset-left)); right: calc(10px + env(safe-area-inset-right)); justify-content: space-between; gap: 6px; }
+    #touch button { min-width: 0; flex: 1 1 0; height: 52px; padding: 0 4px; border-radius: 12px; font-size: 12px; }
+    #touch button.primary { flex: 1.25 1 0; }
+    #touch button span { font-size: 17px; }
+    #overlay { padding: 14px; padding-bottom: 80px; }
+    #overlay .keys { display: none; }
+    .maps { gap: 10px; margin-top: 14px; }
+    .map { width: min(300px, 88vw); padding: 10px 12px; }
+    .map .desc { display: none; }
+    #overlay .btn { margin-top: 14px; padding: 12px 36px; font-size: 18px; }
+    #hud b { font-size: 22px; }
+    #hud { padding: 8px 10px; font-size: 12px; }
   }
-  .fill-btn:hover{ background:#000; }
-  .fill-btn.danger{ background:var(--danger); }
-  .fill-btn.danger:hover{ background:#c23f3f; }
-  .icon-btn{
-    width:36px; height:36px; border:none; background:transparent; color:var(--ink-soft); border-radius:10px;
-    display:flex; align-items:center; justify-content:center; cursor:pointer; flex:none;
+  @media (max-height: 520px) {
+    #overlay { justify-content: flex-start; padding-top: 10px; }
+    #overlay h1 { font-size: 26px; margin: 0; }
+    #overlay p, #overlay .keys { display: none; }
+    .maps { margin-top: 8px; flex-wrap: nowrap; }
+    .map { width: min(300px, 44vw); padding: 8px 12px; }
+    .map .desc { display: none; }
+    .map .stats { margin-top: 4px; }
+    #overlay .btn { margin-top: 10px; padding: 10px 32px; font-size: 17px; }
   }
-  .icon-btn:hover{ background:var(--bg); color:var(--ink); }
-  .icon-btn.danger-hover:hover{ background:var(--danger-soft); color:var(--danger); }
-  .icon-btn svg{ width:18px; height:18px; }
-  .icon-btn:disabled{ opacity:.32; cursor:default; }
-  .icon-btn:disabled:hover{ background:transparent; color:var(--ink-soft); }
- 
-  /* ============================= HOME VIEW ============================= */
-  #homeView{ height:100%; display:flex; flex-direction:column; }
-  #homeTopbar{ display:flex; align-items:center; gap:10px; padding:16px 22px; border-bottom:1px solid var(--line-soft); flex:none; }
-  #homeTopbar .brand-cluster{ display:flex; align-items:center; gap:10px; }
-  #homeTopbar .spacer{ flex:1; }
- 
-  #homeBody{ flex:1; overflow-y:auto; padding:22px; }
-  .section-label{ font-size:12.5px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-faint); margin:2px 0 16px; }
- 
-  #notesGrid{
-    display:grid; grid-template-columns:repeat(auto-fill, minmax(160px, 1fr)); gap:22px 18px; max-width:1200px;
+  #overlay h1 { font-size: clamp(32px, 6.5vw, 64px); margin: 0 0 4px; letter-spacing: -1px; text-shadow: 0 4px 24px rgba(0,0,0,.5); }
+  #overlay .sub { font-size: clamp(12px, 2vw, 15px); letter-spacing: 3px; opacity: .8; text-transform: uppercase; }
+  #overlay p { margin: 10px 0 0; font-size: clamp(14px, 2.2vw, 17px); opacity: .9; }
+  .maps { display: flex; gap: 14px; margin-top: 22px; flex-wrap: wrap; justify-content: center; }
+  .map {
+    width: min(280px, 42vw); padding: 14px 16px; border-radius: 14px; text-align: left; cursor: pointer;
+    background: rgba(255,255,255,.08); border: 2px solid rgba(255,255,255,.15); transition: .15s;
   }
-  .note-card-wrap{ display:flex; flex-direction:column; gap:8px; }
-  .note-card{
-    position:relative; aspect-ratio: 1240 / 1754; border:2px solid var(--line); border-radius:var(--radius-lg);
-    background:var(--paper); cursor:pointer; overflow:hidden; box-shadow:var(--shadow-sm); transition:transform .1s ease, box-shadow .1s ease;
+  .map:hover { background: rgba(255,255,255,.16); }
+  .map.active { border-color: #ffcf3d; background: rgba(255,207,61,.14); }
+  .map .name { font-size: 18px; font-weight: 700; }
+  .map .tag { font-size: 11px; letter-spacing: 2px; opacity: .7; text-transform: uppercase; }
+  .map .desc { font-size: 12px; opacity: .8; margin-top: 6px; line-height: 1.5; }
+  .map .stats { font-size: 12px; margin-top: 8px; opacity: .9; font-variant-numeric: tabular-nums; }
+  #overlay .btn {
+    margin-top: 22px; padding: 14px 44px; border-radius: 999px; background: #c8102e; color: #fff; cursor: pointer;
+    font-size: 20px; font-weight: 700; box-shadow: 0 8px 24px rgba(200,16,46,.45);
   }
-  .note-card:hover{ transform:translateY(-2px); box-shadow:var(--shadow); }
-  .note-card img{ width:100%; height:100%; object-fit:cover; display:block; }
-  .card-kebab{
-    position:absolute; top:6px; right:6px; width:28px; height:28px; border-radius:8px; border:1px solid var(--line-soft);
-    background:rgba(255,255,255,0.96); color:var(--ink-soft); display:flex; align-items:center; justify-content:center;
-    cursor:pointer; box-shadow:var(--shadow-sm);
-  }
-  .card-kebab:hover{ color:var(--blue-deep); border-color:var(--blue); background:var(--blue-soft); }
-  .card-kebab svg{ width:14px; height:14px; }
-  .note-name-input{
-    border:none; background:transparent; font-size:13px; color:var(--ink-soft); text-align:center; padding:4px 4px;
-    border-radius:6px; width:100%; font-style:italic;
-  }
-  .note-name-input:focus{ background:var(--paper); border:1px solid var(--line-soft); font-style:normal; color:var(--ink); outline:none; }
- 
-  #homeEmptyState{ display:none; flex-direction:column; align-items:center; justify-content:center; gap:14px; height:70%; color:var(--ink-faint); text-align:center; }
-  #homeEmptyState .logo-badge{ width:56px; height:56px; border-radius:16px; }
-  #homeEmptyState .logo-badge svg{ width:36px; height:24px; }
-  #homeEmptyState p{ margin:0; font-size:14px; max-width:260px; line-height:1.5; }
- 
-  /* ============================= Template picker ============================= */
-  .tpl-blank{ background-image:none; }
-  .tpl-dots{ background-image:radial-gradient(circle, var(--line-soft) 1px, transparent 1px); background-size:26px 26px; }
-  .tpl-lined-narrow{ background-image:repeating-linear-gradient(to bottom, var(--line-soft) 0 1px, transparent 1px 24px); }
-  .tpl-lined-thick{ background-image:repeating-linear-gradient(to bottom, var(--line-soft) 0 1px, transparent 1px 44px); }
-  .tpl-legal{ background-image:repeating-linear-gradient(to bottom, #CFE0F5 0 1px, transparent 1px 34px), linear-gradient(to right, transparent 0 11.5%, #F2B8B8 11.5% 12%, transparent 12%); }
-  .tpl-column{ background-image:repeating-linear-gradient(to right, var(--line-soft) 0 1px, transparent 1px 90px); }
- 
-  .template-grid{ display:grid; grid-template-columns:repeat(3, 1fr); gap:12px; margin-top:4px; }
-  .template-cell{ border:2px solid transparent; background:none; cursor:pointer; display:flex; flex-direction:column; align-items:center; gap:6px; padding:6px; border-radius:12px; }
-  .template-cell:hover{ background:var(--bg); }
-  .template-cell.selected{ border-color:var(--blue); background:var(--blue-soft); }
-  .template-preview{ width:100%; aspect-ratio:1240/1754; border:1.5px solid var(--line-soft); border-radius:8px; background-color:#fff; }
-  .template-cell span{ font-size:11px; font-weight:600; color:var(--ink-soft); text-align:center; }
- 
-  /* ============================= EDITOR VIEW ============================= */
-  #editorView{ height:100%; display:none; flex-direction:column; }
-  #editorTopbar{ display:flex; align-items:center; gap:10px; padding:10px 16px; border-bottom:1px solid var(--line-soft); flex:none; }
-  .title-cluster{ display:flex; flex-direction:column; margin-right:6px; min-width:44px; flex:none; }
-  #noteTitle{
-    font-family:var(--font-display); font-weight:600; font-size:14px; border:none; outline:none; background:transparent;
-    padding:2px 4px; border-radius:6px; max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-  }
-  #noteTitle:focus{ background:var(--bg); }
- 
-  #toolRect{
-    flex:1; display:flex; align-items:center; gap:2px; border:2px solid var(--line); border-radius:999px;
-    padding:5px 8px; overflow-x:auto; max-width:640px;
-  }
-  .tool-btn{
-    width:36px; height:36px; flex:none; border:2px solid transparent; border-radius:999px; background:transparent;
-    color:var(--ink-soft); display:flex; align-items:center; justify-content:center; cursor:pointer;
-  }
-  .tool-btn:hover{ background:var(--bg); }
-  .tool-btn svg{ width:17px; height:17px; }
-  .tool-btn.active{ border-color:var(--blue); background:var(--blue-soft); color:var(--blue-deep); }
-  .tool-divider{ width:1px; height:20px; background:var(--line-soft); flex:none; margin:0 4px; }
- 
-  .topbar-spacer{ flex:1; }
-  #editorTopbar .right-cluster{ display:flex; align-items:center; gap:2px; flex:none; }
- 
-  #styleRow{
-    display:none; align-items:center; gap:14px; padding:8px 16px; border-bottom:1px solid var(--line-soft); flex:none; overflow-x:auto;
-  }
-  #styleRow.visible{ display:flex; }
-  .swatch-row{ display:flex; align-items:center; gap:6px; }
-  .swatch{ width:20px; height:20px; border-radius:50%; border:2px solid transparent; cursor:pointer; padding:0; }
-  .swatch.active{ border-color:var(--ink); }
-  #customColorInput{ width:22px; height:22px; border:none; padding:0; background:none; cursor:pointer; border-radius:50%; }
-  #customColorInput::-webkit-color-swatch-wrapper{ padding:0; }
-  #customColorInput::-webkit-color-swatch{ border:2px solid var(--line-soft); border-radius:50%; }
-  #hexColorInput{
-    width:76px; padding:6px 8px; border:1.5px solid var(--line-soft); border-radius:8px; font-size:12px;
-    font-family:ui-monospace, monospace; color:var(--ink-soft); outline:none; text-transform:lowercase;
-  }
-  #hexColorInput:focus{ border-color:var(--blue); color:var(--ink); }
-  #fontSelect{
-    padding:6px 8px; border:1.5px solid var(--line-soft); border-radius:8px; font-size:12px;
-    color:var(--ink); background:var(--paper); outline:none; cursor:pointer; max-width:120px;
-  }
-  #fontSelect:focus{ border-color:var(--blue); }
-  .width-slider-wrap{ display:flex; align-items:center; gap:8px; }
-  #widthSlider{
-    -webkit-appearance:none; appearance:none; width:120px; height:20px; background:transparent; cursor:pointer; margin:0;
-  }
-  #widthSlider::-webkit-slider-runnable-track{ height:2px; background:var(--line); border-radius:2px; }
-  #widthSlider::-webkit-slider-thumb{
-    -webkit-appearance:none; width:18px; height:18px; border-radius:50%; background:var(--paper);
-    border:2.5px solid var(--blue); margin-top:-8px; box-shadow:var(--shadow-sm);
-  }
-  #widthSlider::-moz-range-track{ height:2px; background:var(--line); border-radius:2px; }
-  #widthSlider::-moz-range-thumb{
-    width:18px; height:18px; border-radius:50%; background:var(--paper); border:2.5px solid var(--blue); box-shadow:var(--shadow-sm);
-  }
-  #widthValue{ font-size:11.5px; font-weight:600; color:var(--ink-soft); min-width:30px; }
-  .style-divider{ width:1px; height:18px; background:var(--line-soft); }
- 
-  #canvasArea{ flex:1; overflow:auto; padding:24px; display:flex; flex-direction:column; align-items:center; gap:16px; background:var(--bg); position:relative; }
-  #canvasWrap{ width:min(860px, 100%); flex:none; transform-origin: top center; }
-  .page-surface{
-    position:relative; width:100%; aspect-ratio:1240/1754; background-color:var(--paper);
-    border-radius:var(--radius); border:2px solid var(--line);
-    box-shadow:var(--shadow); overflow:hidden; touch-action:none;
-  }
-  #ink-canvas, #overlay-canvas{ position:absolute; inset:0; width:100%; height:100%; }
-  #overlay-canvas{ pointer-events:none; }
-  .text-layer{ position:absolute; inset:0; pointer-events:none; }
-  .text-layer.tool-active{ pointer-events:auto; cursor:text; }
-  .text-item{ position:absolute; }
-  .text-item-editable{
-    display:inline-block; min-width:24px; max-width:60vw; line-height:1.25; white-space:pre-wrap;
-    word-break:break-word; outline:none; user-select:none; padding:2px; vertical-align:top;
-  }
-  .text-layer.tool-active .text-item-editable{ user-select:text; cursor:text; }
-  .text-item.dragging .text-item-editable{ cursor:grabbing; background:rgba(31,169,224,0.08); border-radius:4px; }
-  .text-item-delete{
-    position:absolute; top:-12px; right:-14px; width:22px; height:22px; border-radius:0;
-    background:transparent; color:var(--danger); border:none; display:none;
-    align-items:center; justify-content:center; cursor:pointer; z-index:2; padding:0;
-  }
-  .text-layer.tool-active .text-item-delete{ display:flex; }
-  .text-item-delete svg{
-    width:16px; height:16px;
-    filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 1.5px #fff);
-  }
-  .text-item-delete:hover{ color:#c23f3f; }
-  #brushCursor{
-    position:absolute; border:1.5px solid var(--ink-soft); background:rgba(31,169,224,0.10);
-    border-radius:50%; pointer-events:none; transform:translate(-50%,-50%); display:none; z-index:5;
-  }
-  #emptyHint{
-    position:absolute; top:40%; left:0; right:0; text-align:center; color:var(--ink-faint);
-    font-size:14px; pointer-events:none; user-select:none;
-  }
- 
-  /* ---------- Page navigator ---------- */
-  #pageNav{
-    flex:none; display:flex; align-items:center; gap:2px;
-    background:var(--paper); border:1.5px solid var(--line-soft); border-radius:999px; padding:5px; box-shadow:var(--shadow-sm);
-    margin-bottom:8px;
-  }
-  #pageIndicator{ font-size:12px; font-weight:600; color:var(--ink-soft); padding:0 8px; white-space:nowrap; min-width:80px; text-align:center; }
-  .pagenav-divider{ width:1px; height:20px; background:var(--line-soft); margin:0 3px; flex:none; }
- 
-  /* ============================= Spotlight ============================= */
-  #spotlightOverlay{
-    position:fixed; inset:0; background:rgba(21,23,28,0.38); display:none; align-items:flex-start; justify-content:center;
-    padding-top:min(12vh, 110px); z-index:110;
-  }
-  #spotlightOverlay.open{ display:flex; }
-  #spotlightBox{ width:min(560px, 92vw); max-height:74vh; background:var(--paper); border-radius:var(--radius-lg); box-shadow:var(--shadow); display:flex; flex-direction:column; overflow:hidden; }
-  .spotlight-search-row{ display:flex; align-items:center; gap:10px; padding:14px 16px; border-bottom:1px solid var(--line-soft); flex:none; }
-  .spotlight-search-row svg.mag{ width:18px; height:18px; color:var(--ink-faint); flex:none; }
-  #spotlightInput{ flex:1; border:none; outline:none; font-size:15px; background:transparent; }
-  #spotlightBody{ overflow-y:auto; padding:14px 16px 20px; }
- 
-  .spotlight-section-title{ font-size:11.5px; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-faint); margin:16px 0 8px; }
-  .spotlight-result{ background:var(--bg); border-radius:12px; padding:11px 12px; font-size:13px; line-height:1.55; white-space:pre-wrap; max-height:200px; overflow-y:auto; }
-  .spotlight-result.empty{ color:var(--ink-faint); font-style:italic; }
- 
-  .search-hit{ padding:9px 10px; border-radius:10px; cursor:pointer; margin-top:6px; border:1px solid var(--line-soft); }
-  .search-hit:hover{ border-color:var(--blue); background:var(--blue-soft); }
-  .search-hit .sh-title{ font-weight:600; font-size:12.5px; }
- 
-  /* ---------- Modal ---------- */
-  #modalOverlay{ position:fixed; inset:0; background:rgba(21,23,28,0.32); display:none; align-items:center; justify-content:center; z-index:120; }
-  #modalOverlay.open{ display:flex; }
-  #modalBox{ background:var(--paper); border-radius:var(--radius-lg); padding:22px; width:320px; box-shadow:var(--shadow); max-height:82vh; overflow-y:auto; }
-  #modalBox.wide{ width:380px; }
-  #modalBox h3{ margin:0 0 6px; font-family:var(--font-display); font-size:16px; }
-  #modalBox p{ margin:0 0 14px; font-size:13px; color:var(--ink-soft); line-height:1.5; }
-  #modalBox input[type=text]{ width:100%; padding:9px 11px; border:1.5px solid var(--line-soft); border-radius:10px; font-size:13.5px; outline:none; margin-bottom:14px; }
-  #modalBox input[type=text]:focus{ border-color:var(--blue); }
-  .modal-actions{ display:flex; justify-content:flex-end; gap:8px; }
- 
-  /* ---------- Popover ---------- */
-  .popover-menu{ position:fixed; background:var(--paper); border:1.5px solid var(--line-soft); border-radius:12px; box-shadow:var(--shadow); padding:5px; z-index:130; min-width:150px; display:none; }
-  .popover-menu.open{ display:block; }
-  .popover-menu button{ display:flex; align-items:center; gap:8px; width:100%; text-align:left; background:none; border:none; padding:8px 9px; border-radius:8px; font-size:12.5px; color:var(--ink); cursor:pointer; }
-  .popover-menu button:hover{ background:var(--bg); }
-  .popover-menu button.danger{ color:var(--danger); }
-  .popover-menu button svg{ width:14px; height:14px; }
- 
-  #settingsPopover{ width:220px; padding:12px; }
-  .setting-row{ display:flex; align-items:center; justify-content:space-between; padding:7px 0; font-size:12.5px; }
-  .switch{ position:relative; width:36px; height:20px; flex:none; }
-  .switch input{ opacity:0; width:0; height:0; }
-  .switch .track{ position:absolute; inset:0; background:var(--line-soft); border-radius:999px; transition:.15s; cursor:pointer; }
-  .switch .track:before{ content:""; position:absolute; width:16px; height:16px; left:2px; top:2px; background:#fff; border-radius:50%; transition:.15s; box-shadow:0 1px 3px rgba(0,0,0,.2); }
-  .switch input:checked + .track{ background:var(--blue); }
-  .switch input:checked + .track:before{ transform:translateX(16px); }
-  .settings-divider{ height:1px; background:var(--line-soft); margin:6px 0; }
-  #clearDataBtn{ width:100%; justify-content:center; color:var(--danger); border:1.5px solid var(--danger-soft); background:var(--danger-soft); margin-top:2px; border-radius:10px; padding:8px; font-size:12.5px; font-weight:600; cursor:pointer; }
-  #clearDataBtn:hover{ background:#fbdada; }
- 
-  /* ---------- Toasts ---------- */
-  #toastContainer{ position:fixed; bottom:18px; right:18px; display:flex; flex-direction:column; gap:8px; z-index:200; }
-  .toast{ background:var(--ink); color:#fff; padding:10px 14px; border-radius:10px; font-size:12.5px; box-shadow:var(--shadow); animation:toastIn .18s ease; max-width:280px; }
-  .toast.error{ background:var(--danger); }
-  .toast.success{ background:var(--green); }
-  @keyframes toastIn{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
- 
-  @media (max-width: 640px){
-    #toolRect{ max-width:none; }
-    .title-cluster{ min-width:34px; }
-    #noteTitle{ max-width:74px; font-size:12.5px; }
-    .note-name-input{ font-size:12px; }
-    #pageIndicator{ min-width:56px; font-size:11px; }
-  }
+  #overlay .keys { margin-top: 22px; font-size: 12px; opacity: .7; line-height: 1.9; }
+  #overlay.hidden { display: none; }
+  #loading { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; color: #fff; background: #2a2620; font-size: 18px; }
+  #loading.hidden { display: none; }
+  kbd { background: rgba(255,255,255,.15); border-radius: 4px; padding: 1px 6px; font-family: inherit; }
 </style>
 </head>
 <body>
-<div id="app">
- 
-  <!-- ============================= HOME VIEW ============================= -->
-  <div id="homeView">
-    <div id="homeTopbar">
-      <div class="brand-cluster">
-        <div class="logo-badge" id="homeLogoBadge"></div>
-        <span class="wordmark">Fly Notes</span>
-      </div>
-      <div class="spacer"></div>
-      <button class="outline-btn" id="newNoteBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        New
-      </button>
-    </div>
-    <div id="homeBody">
-      <div class="section-label">Saved notes</div>
-      <div id="notesGrid"></div>
-      <div id="homeEmptyState">
-        <div class="logo-badge" id="emptyLogoBadge"></div>
-        <p>No notes yet. Tap "New" to start your first page.</p>
-        <button class="fill-btn" id="emptyNewNoteBtn">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-          Create a note
-        </button>
-      </div>
-    </div>
-  </div>
- 
-  <!-- ============================= EDITOR VIEW ============================= -->
-  <div id="editorView">
-    <div id="editorTopbar">
-      <button class="icon-btn" id="backBtn" title="Back to notes">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div class="logo-badge sm" id="editorLogoBadge"></div>
-      <div class="title-cluster">
-        <span id="noteTitle" contenteditable="true" spellcheck="false"></span>
-      </div>
- 
-      <div id="toolRect">
-        <button class="tool-btn" data-tool="pen" title="Pen">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
-        </button>
-        <button class="tool-btn" data-tool="paintbrush" title="Paintbrush">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M7 21c-1.2-3 0.6-5.4 2.8-6.4l7.6-7.6a2.1 2.1 0 0 1 3 3l-7.6 7.6c-1 2.2-3.4 4-5.8 3.4Z"/><path d="M14.5 6.5l3 3"/></svg>
-        </button>
-        <button class="icon-btn" id="redoBtn" title="Redo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M15 14l5-5-5-5"/><path d="M20 9H10a6 6 0 0 0 0 12h2"/></svg>
-        </button>
-        <button class="icon-btn" id="undoBtn" title="Undo">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-2"/></svg>
-        </button>
-        <div class="tool-divider"></div>
-        <button class="tool-btn" data-tool="highlighter" title="Highlighter">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11 15 5l4 4-6 6H9v-4Z"/><path d="M5 21l1.5-4.5L11 21H5Z"/></svg>
-        </button>
-        <button class="tool-btn" data-tool="eraser" title="Eraser">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="12" width="15" height="7" rx="1.5" transform="rotate(-18 12.5 15.5)"/><path d="M4 20h9"/></svg>
-        </button>
-        <button class="tool-btn" data-tool="text" title="Text">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M5 6h14M12 6v14"/></svg>
-        </button>
-        <div class="tool-divider"></div>
-        <button class="icon-btn" id="spotlightBtn" title="Spotlight (Ctrl+K)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-        </button>
-        <button class="icon-btn" id="settingsBtn" title="Settings">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.2a1.7 1.7 0 0 0-1-1.5 1.7 1.7 0 0 0-1.9.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.9 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.2a1.7 1.7 0 0 0 1.5-1 1.7 1.7 0 0 0-.3-1.9l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.9.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.2a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.9-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.9V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.2a1.7 1.7 0 0 0-1.5 1Z"/></svg>
-        </button>
-      </div>
- 
-      <div class="topbar-spacer"></div>
-      <div class="right-cluster">
-        <button class="icon-btn" id="clearPageBtn" title="Clear this page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="16" rx="2"/><path d="M9.5 9.5l5 5M14.5 9.5l-5 5"/></svg>
-        </button>
-        <button class="icon-btn danger-hover" id="deleteNoteBtn" title="Delete this note">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M10 11v6M14 11v6"/><path d="M6 7l1 13a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-13"/><path d="M9 7V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3"/></svg>
-        </button>
-      </div>
-    </div>
- 
-    <div id="styleRow">
-      <div class="swatch-row" id="swatchRow"></div>
-      <input type="color" id="customColorInput" title="Custom color" value="#15171C" />
-      <input type="text" id="hexColorInput" placeholder="#000000" maxlength="7" title="Exact hex color" />
-      <select id="fontSelect" title="Font"></select>
-      <div class="style-divider"></div>
-      <div class="width-slider-wrap">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:12px;height:12px;flex:none;color:var(--ink-faint);"><circle cx="12" cy="12" r="2"/></svg>
-        <input type="range" id="widthSlider" min="1" max="14" step="0.5" value="4" />
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="width:18px;height:18px;flex:none;color:var(--ink-faint);"><circle cx="12" cy="12" r="5"/></svg>
-        <span id="widthValue">4px</span>
-      </div>
-    </div>
- 
-    <div id="canvasArea">
-      <div id="canvasWrap">
-        <div class="page-surface" id="pageSurface">
-          <canvas id="ink-canvas"></canvas>
-          <canvas id="overlay-canvas"></canvas>
-          <div id="textLayer" class="text-layer"></div>
-          <div id="brushCursor"></div>
-          <div id="emptyHint">Start writing…</div>
-        </div>
-      </div>
-      <div id="pageNav">
-        <button class="icon-btn" id="prevPageBtn" title="Previous page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-        </button>
-        <span id="pageIndicator">Page 1 of 1</span>
-        <button class="icon-btn" id="nextPageBtn" title="Next page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-        </button>
-        <div class="pagenav-divider"></div>
-        <button class="icon-btn" id="addPageBtn" title="New page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
-        </button>
-        <button class="icon-btn danger-hover" id="deletePageBtn" title="Delete this page">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/></svg>
-        </button>
-      </div>
-    </div>
-  </div>
- 
-</div>
- 
-<!-- ============================= Spotlight (search) ============================= -->
-<div id="spotlightOverlay">
-  <div id="spotlightBox">
-    <div class="spotlight-search-row">
-      <svg class="mag" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input id="spotlightInput" type="text" placeholder="Search your notes…" />
-      <button class="icon-btn" id="spotlightCloseBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
-      </button>
-    </div>
-    <div id="spotlightBody">
-      <div id="spSearchResultsWrap" style="display:none;">
-        <div id="spSearchResults"></div>
-      </div>
-      <div class="spotlight-result empty" id="spSearchHint">Start typing to search note names.</div>
-    </div>
+<div id="loading">트랙을 건설하는 중... 🎢</div>
+<div id="overlay" class="hidden">
+  <div class="sub" id="ovSub">Rollercoaster</div>
+  <h1>My Rollercoaster</h1>
+  <p>저의 롤러코스터를 플레이 하세요!</p>
+  <div class="maps" id="maps"></div>
+  <div class="btn" id="startBtn">출발하기</div>
+  <div class="keys" id="keysHint">
+    화면 클릭 또는 <kbd>Space</kbd> 출발 / 일시정지 &nbsp;·&nbsp; <kbd>V</kbd> 맨 앞줄 / 둘째 칸 &nbsp;·&nbsp; <kbd>C</kbd> 외부 시점 &nbsp;·&nbsp; <kbd>M</kbd> 소리<br>
+    마우스·터치 드래그 주위 둘러보기 &nbsp;·&nbsp; <kbd>R</kbd> 처음부터 &nbsp;·&nbsp; <kbd>1</kbd> / <kbd>2</kbd> 맵 바꾸기
   </div>
 </div>
- 
-<div id="modalOverlay"><div id="modalBox"></div></div>
-<div class="popover-menu" id="itemMenu"></div>
-<div class="popover-menu" id="settingsPopover">
-  <div class="setting-row">
-    <span>Draw with touch</span>
-    <label class="switch"><input type="checkbox" id="touchDrawToggle" /><span class="track"></span></label>
-  </div>
-  <div style="font-size:11px; color:var(--ink-faint); line-height:1.4; margin-top:-4px; margin-bottom:4px;">
-    Off by default on touch devices. When off, one finger pans the page and two fingers pinch to zoom, instead of drawing.
-  </div>
-  <div class="settings-divider"></div>
-  <button id="clearDataBtn">Erase all Fly Notes data</button>
+<div id="mapTag"></div>
+<div id="touch" class="hidden">
+  <button data-act="pause" class="primary"><span>▶</span>출발</button>
+  <button data-act="seat"><span>🪑</span>둘째칸</button>
+  <button data-act="chase"><span>🎥</span>외부</button>
+  <button data-act="mute"><span>🔊</span>소리</button>
+  <button data-act="map"><span>🗺</span>맵</button>
+  <button data-act="reset"><span>↺</span>처음</button>
 </div>
-<div id="toastContainer"></div>
+<div id="hud">
+  <b id="speed">0</b> km/h<br>
+  <small>높이 <span id="height">0</span> m &nbsp;·&nbsp; <span id="gforce">1.0</span> G &nbsp;·&nbsp; <span id="lap">1</span>바퀴</small>
+</div>
  
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script>
-(function(){
- 
-/* ============================= Logo ============================= */
-const BIRD_SVG = `<svg viewBox="0 0 322 213" xmlns="http://www.w3.org/2000/svg">
-  <path d="M143 5 C130.2 13.3 84.3 44 66 55 C47.7 66 41.2 65.7 33 71 C24.8 76.3 20.7 81.8 17 87 C13.3 92.2 11.5 96.3 11 102 C10.5 107.7 11 114.8 14 121 C17 127.2 21.3 133.2 29 139 C36.7 144.8 42.7 143.8 60 156 C77.3 168.2 107.2 211.8 133 212 C158.8 212.2 197.3 168 215 157 C232.7 146 232 150.3 239 146 C246 141.7 254 133.5 257 131 L313 115 C263.3 91 265.7 86 245 71 C224.3 56 160 16 143 5 Z" fill="#1FA9E0"/>
-  <circle cx="223.5" cy="84.5" r="5.5" fill="#15171C"/>
-</svg>`;
-document.getElementById('homeLogoBadge').innerHTML = BIRD_SVG;
-document.getElementById('emptyLogoBadge').innerHTML = BIRD_SVG;
-document.getElementById('editorLogoBadge').innerHTML = BIRD_SVG;
- 
-/* ============================= Constants ============================= */
-const PAGE_W = 1240, PAGE_H = 1754;
-const COLORS = ['#000000','#7F7F7F','#880015','#ED1C24','#FF7F27','#FFF200','#22B14C','#00A2E8','#3F48CC','#A349A4'];
-const WIDTH_RANGES = {
-  pen: { min: 1, max: 14 },
-  paintbrush: { min: 3, max: 28 },
-  highlighter: { min: 8, max: 44 },
-  eraser: { min: 8, max: 60 },
-  text: { min: 14, max: 72 }
-};
-const FONTS = [
-  { id: 'sans',    label: 'Sans',    css: "'Inter', system-ui, sans-serif" },
-  { id: 'serif',   label: 'Serif',   css: "'Playfair Display', Georgia, serif" },
-  { id: 'mono',    label: 'Mono',    css: "ui-monospace, 'Courier New', monospace" },
-  { id: 'display', label: 'Display', css: "'Space Grotesk', sans-serif" },
-  { id: 'hand',    label: 'Hand',    css: "'Caveat', cursive" }
-];
-function fontCss(id){ const f = FONTS.find(f => f.id === id); return (f || FONTS[0]).css; }
-const TEMPLATES = [
-  { id: 'blank', label: 'Blank' },
-  { id: 'dots', label: 'Dots' },
-  { id: 'lined-narrow', label: 'Lined (narrow)' },
-  { id: 'lined-thick', label: 'Lined (thick)' },
-  { id: 'legal', label: 'Legal' },
-  { id: 'column', label: 'Column' }
-];
-const IS_TOUCH_DEVICE = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
-function defaultSettings(){ return { touchDraw: !IS_TOUCH_DEVICE }; }
- 
-/* ============================= State ============================= */
-let state = null;
-let currentNoteId = null;
-let currentPageId = null;
-const redoStacks = {};
-let currentTool = 'pen';
-const toolConfigs = {
-  pen: { color: '#000000', width: 4 },
-  paintbrush: { color: '#00A2E8', width: 10, opacity: 0.92 },
-  highlighter: { color: '#FFF200', width: 22, opacity: 0.35 },
-  eraser: { width: 24 },
-  text: { color: '#000000', width: 28, fontFamily: 'sans' }
-};
- 
-function uid(){ return Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); }
- 
-function freshPage(){ return { id: uid(), strokes: [], texts: [] }; }
-function freshNote(name, template){
-  const t = Date.now();
-  return { id: uid(), name: name || 'Untitled note', template: template || 'dots', pages: [freshPage()], createdAt: t, updatedAt: t };
-}
-function defaultState(){
-  return { version: 3, notes: [freshNote('Getting started', 'dots')], settings: defaultSettings() };
-}
-function migrate(loaded){
-  if(loaded && Array.isArray(loaded.notes) && loaded.notes.length && Array.isArray(loaded.notes[0].pages)){
-    loaded.notes.forEach(n => {
-      if(!n.template) n.template = 'dots';
-      n.pages.forEach(p => { if(!Array.isArray(p.texts)) p.texts = []; });
-    });
-    return loaded;
-  }
-  if(loaded && Array.isArray(loaded.notes)){
-    const notes = loaded.notes.map(n => ({
-      id: n.id || uid(), name: n.name || 'Untitled note', template: 'dots',
-      pages: [{ id: uid(), strokes: n.strokes || [], texts: [] }],
-      createdAt: n.createdAt || Date.now(), updatedAt: n.updatedAt || Date.now()
-    }));
-    return { version: 3, notes: notes.length ? notes : [freshNote()], settings: (loaded.settings && typeof loaded.settings.touchDraw === 'boolean') ? loaded.settings : defaultSettings() };
-  }
-  if(loaded && Array.isArray(loaded.pages)){
-    const notes = loaded.pages.map(p => ({
-      id: p.id || uid(), name: p.name || 'Untitled note', template: 'dots',
-      pages: [{ id: uid(), strokes: p.strokes || [], texts: [] }],
-      createdAt: Date.now(), updatedAt: Date.now()
-    }));
-    return { version: 3, notes: notes.length ? notes : [freshNote()], settings: defaultSettings() };
-  }
-  return defaultState();
-}
- 
-/* ============================= Storage ============================= */
-/* Primary: window.storage (persists via Claude's artifact storage).
-   Fallback: localStorage (works when this file is opened directly in a
-   browser, or if window.storage has a transient failure). Every save
-   writes to both when possible so a switch between contexts doesn't
-   silently lose data. */
-const LOCAL_KEY_PREFIX = 'flynotes:';
-function hasWindowStorage(){ return !!(window.storage && typeof window.storage.get === 'function' && typeof window.storage.set === 'function'); }
-async function storageGet(key){
-  if(hasWindowStorage()){
-    try{
-      const res = await window.storage.get(key, false);
-      if(res && typeof res.value === 'string') return res.value;
-    }catch(e){ console.warn('window.storage.get failed, trying localStorage', e); }
-  }
-  try{ const v = localStorage.getItem(LOCAL_KEY_PREFIX + key); if(v !== null) return v; }catch(e){ console.warn('localStorage.getItem failed', e); }
-  return null;
-}
-async function storageSet(key, value){
-  let ok = false;
-  if(hasWindowStorage()){
-    for(let attempt = 0; attempt < 2; attempt++){
-      try{ await window.storage.set(key, value, false); ok = true; break; }
-      catch(e){ console.warn('window.storage.set failed (attempt ' + (attempt+1) + ')', e); await new Promise(r => setTimeout(r, 300)); }
-    }
-  }
-  try{ localStorage.setItem(LOCAL_KEY_PREFIX + key, value); ok = true; }
-  catch(e){ console.warn('localStorage.setItem failed', e); }
-  return ok;
-}
-let saveTimer = null;
-function scheduleSave(){ clearTimeout(saveTimer); saveTimer = setTimeout(saveState, 500); }
-async function saveState(){
-  try{
-    const json = JSON.stringify(state);
-    if(json.length > 4.5 * 1024 * 1024) showToast('Your notes are getting large — consider deleting old ones.', 'error');
-    const ok = await storageSet('state', json);
-    if(!ok) showToast('Could not save your changes.', 'error');
-  }catch(e){ console.error('save failed', e); showToast('Could not save your changes.', 'error'); }
-}
-async function loadState(){
-  try{
-    const raw = await storageGet('state');
-    if(raw){
-      state = migrate(JSON.parse(raw));
-      if(!state.settings) state.settings = defaultSettings();
-    } else { state = defaultState(); await saveState(); }
-  }catch(e){ console.error('load failed', e); state = defaultState(); await saveState(); }
-}
- 
-/* ============================= Helpers ============================= */
-function getNote(id){ return state.notes.find(n => n.id === id) || null; }
-function getCurrentNote(){ return currentNoteId ? getNote(currentNoteId) : null; }
-function currentPage(){
-  const note = getCurrentNote(); if(!note) return null;
-  return note.pages.find(p => p.id === currentPageId) || note.pages[0] || null;
-}
- 
-function showToast(msg, type){
-  const c = document.getElementById('toastContainer');
-  const el = document.createElement('div');
-  el.className = 'toast' + (type ? ' ' + type : '');
-  el.textContent = msg;
-  c.appendChild(el);
-  setTimeout(()=>{ el.remove(); }, 3200);
-}
- 
-/* ============================= Modal ============================= */
-function closeModal(){ document.getElementById('modalOverlay').classList.remove('open'); document.getElementById('modalBox').innerHTML=''; document.getElementById('modalBox').classList.remove('wide'); }
-function openConfirmModal({ title, message, confirmLabel, danger, onConfirm }){
-  const box = document.getElementById('modalBox'); box.innerHTML = '';
-  const h = document.createElement('h3'); h.textContent = title; box.appendChild(h);
-  const p = document.createElement('p'); p.textContent = message; box.appendChild(p);
-  const actions = document.createElement('div'); actions.className = 'modal-actions';
-  const cancel = document.createElement('button'); cancel.className = 'outline-btn'; cancel.textContent = 'Cancel'; cancel.onclick = closeModal;
-  const ok = document.createElement('button'); ok.className = 'fill-btn' + (danger ? ' danger' : ''); ok.textContent = confirmLabel || 'Confirm';
-  ok.onclick = () => { closeModal(); onConfirm(); };
-  actions.appendChild(cancel); actions.appendChild(ok); box.appendChild(actions);
-  document.getElementById('modalOverlay').classList.add('open');
-}
-function openTemplatePicker(onChoose){
-  const box = document.getElementById('modalBox'); box.innerHTML = ''; box.classList.add('wide');
-  const h = document.createElement('h3'); h.textContent = 'Choose a page style'; box.appendChild(h);
-  const p = document.createElement('p'); p.textContent = 'You can add more pages with the same style later.'; box.appendChild(p);
-  const grid = document.createElement('div'); grid.className = 'template-grid';
-  TEMPLATES.forEach(t => {
-    const cell = document.createElement('button'); cell.className = 'template-cell'; cell.type = 'button';
-    const prev = document.createElement('div'); prev.className = 'template-preview tpl-' + t.id;
-    const label = document.createElement('span'); label.textContent = t.label;
-    cell.appendChild(prev); cell.appendChild(label);
-    cell.addEventListener('click', () => { closeModal(); onChoose(t.id); });
-    grid.appendChild(cell);
-  });
-  box.appendChild(grid);
-  const actions = document.createElement('div'); actions.className = 'modal-actions'; actions.style.marginTop = '16px';
-  const cancel = document.createElement('button'); cancel.className = 'outline-btn'; cancel.textContent = 'Cancel'; cancel.onclick = closeModal;
-  actions.appendChild(cancel); box.appendChild(actions);
-  document.getElementById('modalOverlay').classList.add('open');
-}
-document.getElementById('modalOverlay').addEventListener('click', e => { if(e.target.id === 'modalOverlay') closeModal(); });
- 
-/* ============================= Popover menu ============================= */
-const itemMenu = document.getElementById('itemMenu');
-const settingsPopover = document.getElementById('settingsPopover');
-function openItemMenu(anchorEl, items){
-  itemMenu.innerHTML = '';
-  items.forEach(it => {
-    const b = document.createElement('button');
-    if(it.danger) b.className = 'danger';
-    b.innerHTML = it.icon || '';
-    const span = document.createElement('span'); span.textContent = it.label; b.appendChild(span);
-    b.onclick = (e) => { e.stopPropagation(); closeItemMenu(); it.onClick(); };
-    itemMenu.appendChild(b);
-  });
-  const r = anchorEl.getBoundingClientRect();
-  itemMenu.style.top = (r.bottom + 4) + 'px';
-  itemMenu.style.left = Math.max(8, Math.min(r.left, window.innerWidth - 180)) + 'px';
-  itemMenu.classList.add('open');
-}
-function closeItemMenu(){ itemMenu.classList.remove('open'); }
-document.addEventListener('click', (e) => {
-  if(!itemMenu.contains(e.target)) closeItemMenu();
-  if(!settingsPopover.contains(e.target) && !document.getElementById('settingsBtn').contains(e.target)) settingsPopover.classList.remove('open');
-});
-const TRASH_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16"/><path d="M9 7V4h6v3"/><path d="M7 7l1 13h8l1-13"/></svg>';
-const KEBAB_ICON = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="12" cy="19" r="1.8"/></svg>';
-const PLUS_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
- 
-/* ============================= Canvas engine ============================= */
-const inkCanvas = document.getElementById('ink-canvas');
-const overlayCanvas = document.getElementById('overlay-canvas');
-const inkCtx = inkCanvas.getContext('2d');
-const overlayCtx = overlayCanvas.getContext('2d');
-const brushCursor = document.getElementById('brushCursor');
-const emptyHint = document.getElementById('emptyHint');
- 
-let drawing = false, activePointerId = null, currentPts = [];
- 
-function setCanvasSize(){
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  [inkCanvas, overlayCanvas].forEach(c => { c.width = PAGE_W * dpr; c.height = PAGE_H * dpr; });
-  inkCtx.setTransform(dpr,0,0,dpr,0,0);
-  overlayCtx.setTransform(dpr,0,0,dpr,0,0);
-}
-window.addEventListener('resize', () => { if(currentPage()){ setCanvasSize(); redrawCurrentPage(); } });
- 
-/* ---- Touch mode: when finger-drawing is off, a finger pans/zooms instead of drawing ----
- 
-   IMPORTANT: the page surface always keeps `touch-action: none`. Letting CSS
-   hand panning to the browser (e.g. `touch-action: pan-x pan-y`) applies to
-   EVERY pointer type, pen included — so the browser would decide a stylus drag
-   was a scroll, seize the pointer, and fire `pointercancel`, chopping each
-   stroke into short fragments. Panning is therefore done manually below by
-   scrolling the container ourselves. */
-const canvasWrapEl = document.getElementById('canvasWrap');
-const canvasAreaEl = document.getElementById('canvasArea');
-const pageSurfaceEl = document.getElementById('pageSurface');
-let viewZoom = 1;
-const MIN_ZOOM = 0.5, MAX_ZOOM = 3;
-const activeGestureTouches = new Map();
-let pinchState = null;
-let panState = null;
-let gestureValid = false;
- 
-function updateTouchActionMode(){ /* touch-action stays "none"; panning handled in JS */ }
-function applyZoom(){ canvasWrapEl.style.transform = viewZoom === 1 ? '' : `scale(${viewZoom})`; }
-function resetZoom(){
-  viewZoom = 1;
-  canvasWrapEl.style.transformOrigin = 'top center';
-  applyZoom();
-}
-function gestureTouchDist(map){
-  const pts = Array.from(map.values());
-  return Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
-}
-// Safari fires these non-standard events for pinch gestures and zooms the whole
-// visual viewport with them regardless of the viewport meta tag. Blocking them
-// stops "full screen" zoom so only our own note-scoped zoom below can happen.
-['gesturestart', 'gesturechange', 'gestureend'].forEach(evt => {
-  document.addEventListener(evt, (e) => e.preventDefault());
-});
-canvasAreaEl.addEventListener('pointerdown', (e) => {
-  if(e.pointerType !== 'touch' || state.settings.touchDraw) return;
-  // Palm rejection: while a pen stroke is in progress, ignore every touch so a
-  // resting palm can't pan, zoom, or otherwise disturb the stroke.
-  if(drawing) return;
-  // Only start tracking a gesture if it began on the note itself, not the
-  // surrounding margin or the page-navigator — keeps zoom scoped to the page.
-  if(activeGestureTouches.size === 0){
-    gestureValid = !!e.target.closest('.page-surface');
-  }
-  if(!gestureValid) return;
-  activeGestureTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if(activeGestureTouches.size === 1){
-    panState = {
-      lastX: e.clientX, lastY: e.clientY,
-      startScrollLeft: canvasAreaEl.scrollLeft, startScrollTop: canvasAreaEl.scrollTop
-    };
-  } else if(activeGestureTouches.size === 2){
-    panState = null; // second finger down: this is a pinch, not a pan
-    const pts = Array.from(activeGestureTouches.values());
-    const midX = (pts[0].x + pts[1].x) / 2, midY = (pts[0].y + pts[1].y) / 2;
-    const rect = canvasWrapEl.getBoundingClientRect();
-    const originX = rect.width ? ((midX - rect.left) / rect.width) * 100 : 50;
-    const originY = rect.height ? ((midY - rect.top) / rect.height) * 100 : 0;
-    canvasWrapEl.style.transformOrigin = `${originX}% ${originY}%`;
-    pinchState = { initialDist: gestureTouchDist(activeGestureTouches), initialZoom: viewZoom };
-  }
-});
-canvasAreaEl.addEventListener('pointermove', (e) => {
-  if(e.pointerType !== 'touch' || !activeGestureTouches.has(e.pointerId)) return;
-  const prev = activeGestureTouches.get(e.pointerId);
-  activeGestureTouches.set(e.pointerId, { x: e.clientX, y: e.clientY });
-  if(activeGestureTouches.size === 2 && pinchState && pinchState.initialDist > 0){
-    const dist = gestureTouchDist(activeGestureTouches);
-    viewZoom = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, pinchState.initialZoom * (dist / pinchState.initialDist)));
-    applyZoom();
-  } else if(activeGestureTouches.size === 1 && panState){
-    // One finger: scroll the container manually, matching finger movement.
-    canvasAreaEl.scrollLeft -= (e.clientX - panState.lastX);
-    canvasAreaEl.scrollTop  -= (e.clientY - panState.lastY);
-    panState.lastX = e.clientX; panState.lastY = e.clientY;
-  }
-});
-function endGestureTouch(e){
-  if(e.pointerType !== 'touch') return;
-  activeGestureTouches.delete(e.pointerId);
-  if(activeGestureTouches.size < 2) pinchState = null;
-  if(activeGestureTouches.size === 0){ gestureValid = false; panState = null; }
-  else if(activeGestureTouches.size === 1){
-    // Lifted one finger of a pinch: resume panning from the remaining finger.
-    const remaining = Array.from(activeGestureTouches.values())[0];
-    panState = { lastX: remaining.x, lastY: remaining.y, startScrollLeft: canvasAreaEl.scrollLeft, startScrollTop: canvasAreaEl.scrollTop };
-  }
-}
-canvasAreaEl.addEventListener('pointerup', endGestureTouch);
-canvasAreaEl.addEventListener('pointercancel', endGestureTouch);
- 
-/* ---- Text tool ---- */
-const textLayerEl = document.getElementById('textLayer');
-let pageScale = 1;
-function updatePageScale(){
-  pageScale = (pageSurfaceEl.offsetWidth || PAGE_W) / PAGE_W;
-  textLayerEl.style.setProperty('--page-scale', pageScale);
-}
-function getVisualScale(){
-  const rect = pageSurfaceEl.getBoundingClientRect();
-  return (rect.width / PAGE_W) || 1;
-}
-function textToPx(v){ return (v * pageScale) + 'px'; }
-function placeCaretAtEnd(el){
-  const range = document.createRange();
-  range.selectNodeContents(el);
-  range.collapse(false);
-  const sel = window.getSelection();
-  sel.removeAllRanges();
-  sel.addRange(range);
-}
-function touchNote(){
-  const note = getCurrentNote();
-  if(note) note.updatedAt = Date.now();
-  scheduleSave();
-}
-function renderTextLayer(page){
-  textLayerEl.innerHTML = '';
-  if(!page) return;
-  (page.texts || []).forEach(item => textLayerEl.appendChild(buildTextItemEl(item, page)));
-}
-function buildTextItemEl(item, page){
-  // Structure: a plain positioning wrapper (.text-item) holds two SIBLINGS —
-  // the contenteditable text span and the delete button. The delete button is
-  // never a descendant of the contenteditable region, so it can't be
-  // accidentally selected, edited, or corrupted while typing.
-  const wrap = document.createElement('div');
-  wrap.className = 'text-item';
-  wrap.dataset.textId = item.id;
-  wrap.style.left = textToPx(item.x);
-  wrap.style.top = textToPx(item.y);
- 
-  const editable = document.createElement('span');
-  editable.className = 'text-item-editable';
-  editable.contentEditable = 'true';
-  editable.spellcheck = false;
-  editable.textContent = item.content || '';
-  editable.style.fontSize = textToPx(item.fontSize);
-  editable.style.color = item.color;
-  editable.style.fontFamily = fontCss(item.fontFamily);
-  wrap.appendChild(editable);
- 
-  const del = document.createElement('button');
-  del.className = 'text-item-delete'; del.type = 'button'; del.title = 'Delete text';
-  del.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  del.addEventListener('pointerdown', (e) => e.stopPropagation());
-  del.addEventListener('click', (e) => {
-    e.stopPropagation();
-    page.texts = page.texts.filter(t => t.id !== item.id);
-    wrap.remove();
-    touchNote();
-  });
-  wrap.appendChild(del);
- 
-  let dragInfo = null;
-  wrap.addEventListener('pointerdown', (e) => {
-    if(currentTool !== 'text') return;
-    if(document.activeElement === editable) return;
-    e.stopPropagation();
-    dragInfo = { startX: e.clientX, startY: e.clientY, origX: item.x, origY: item.y, moved: false };
-    try{ wrap.setPointerCapture(e.pointerId); }catch(err){}
-  });
-  wrap.addEventListener('pointermove', (e) => {
-    if(!dragInfo) return;
-    const scale = getVisualScale();
-    const dx = (e.clientX - dragInfo.startX) / scale;
-    const dy = (e.clientY - dragInfo.startY) / scale;
-    if(Math.abs(e.clientX - dragInfo.startX) > 4 || Math.abs(e.clientY - dragInfo.startY) > 4) dragInfo.moved = true;
-    if(dragInfo.moved){
-      item.x = Math.max(0, dragInfo.origX + dx);
-      item.y = Math.max(0, dragInfo.origY + dy);
-      wrap.style.left = textToPx(item.x);
-      wrap.style.top = textToPx(item.y);
-      wrap.classList.add('dragging');
-    }
-  });
-  function endDrag(e){
-    if(!dragInfo) return;
-    const wasMoved = dragInfo.moved;
-    dragInfo = null;
-    wrap.classList.remove('dragging');
-    if(wasMoved) touchNote();
-    else { editable.focus(); placeCaretAtEnd(editable); }
-  }
-  wrap.addEventListener('pointerup', endDrag);
-  wrap.addEventListener('pointercancel', endDrag);
- 
-  editable.addEventListener('blur', () => {
-    item.content = editable.textContent;
-    if(!item.content || !item.content.trim()){
-      page.texts = page.texts.filter(t => t.id !== item.id);
-      wrap.remove();
-    }
-    touchNote();
-  });
-  editable.addEventListener('keydown', (e) => e.stopPropagation());
-  return wrap;
-}
-/* Create a text box on `click`, not `pointerdown`, and focus SYNCHRONOUSLY.
-   Mobile browsers only open the on-screen keyboard for a .focus() that happens
-   inside a real user-gesture callback. Focusing from setTimeout (even 0ms)
-   breaks that chain: the box is created but never focused, so it stays empty
-   and gets auto-removed on the next tap — which looked like the text tool
-   switching itself off. */
-textLayerEl.addEventListener('click', (e) => {
-  if(currentTool !== 'text' || e.target !== textLayerEl) return;
-  const page = currentPage(); if(!page) return;
-  const rect = pageSurfaceEl.getBoundingClientRect();
-  const scale = getVisualScale();
-  const cfg = toolConfigs.text;
-  const item = { id: uid(), x: (e.clientX - rect.left) / scale, y: (e.clientY - rect.top) / scale, fontSize: cfg.width, color: cfg.color, fontFamily: cfg.fontFamily, content: '' };
-  if(!page.texts) page.texts = [];
-  page.texts.push(item);
-  const wrap = buildTextItemEl(item, page);
-  textLayerEl.appendChild(wrap);
-  wrap.querySelector('.text-item-editable').focus();
-});
- 
-function widthFromPressure(base, p, tool){
-  const pr = p > 0 ? p : 0.5;
-  if(tool === 'paintbrush') return Math.max(1, base * (0.15 + pr * 1.9));
-  return Math.max(1, base * (0.4 + pr * 1.2));
-}
- 
-const scratchCanvas = document.createElement('canvas');
-const scratchCtx = scratchCanvas.getContext('2d');
- 
-function strokeBBox(pts, pad){
-  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
-  for(let i = 0; i < pts.length; i += 3){
-    if(pts[i] < minX) minX = pts[i];
-    if(pts[i] > maxX) maxX = pts[i];
-    if(pts[i+1] < minY) minY = pts[i+1];
-    if(pts[i+1] > maxY) maxY = pts[i+1];
-  }
-  return { minX: minX - pad, minY: minY - pad, maxX: maxX + pad, maxY: maxY + pad };
-}
- 
-function paintStrokeShape(ctx, stroke, offsetX, offsetY){
-  const { tool, color, width, pts } = stroke;
-  const n = pts.length / 3;
-  ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = color; ctx.fillStyle = color;
-  if(n === 1){
-    const r = tool === 'highlighter' ? width / 2 : widthFromPressure(width, pts[2], tool) / 2;
-    ctx.beginPath(); ctx.arc(pts[0] - offsetX, pts[1] - offsetY, Math.max(r, 0.6), 0, Math.PI * 2); ctx.fill();
+(function () {
+  'use strict';
+  if (typeof THREE === 'undefined') {
+    document.getElementById('loading').textContent = '3D 라이브러리를 불러오지 못했습니다. 인터넷 연결을 확인하고 새로 고침해 주세요.';
     return;
   }
-  for(let i = 0; i < n - 1; i++){
-    const x1 = pts[i*3] - offsetX, y1 = pts[i*3+1] - offsetY, p1 = pts[i*3+2];
-    const x2 = pts[(i+1)*3] - offsetX, y2 = pts[(i+1)*3+1] - offsetY, p2 = pts[(i+1)*3+2];
-    const w = tool === 'highlighter' ? width : widthFromPressure(width, (p1+p2)/2, tool);
-    ctx.lineWidth = w;
-    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+ 
+  const col = h => new THREE.Color(h).convertSRGBToLinear();
+  const G = 9.81;
+ 
+  // ---------- 기기 감지: 터치 기기면 화면 버튼, 폰/저사양이면 그래픽 자동 완화 ----------
+  const IS_TOUCH = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+  const IS_PHONE = IS_TOUCH && Math.min(screen.width, screen.height) < 820;
+  const LOW_END = IS_PHONE || (navigator.hardwareConcurrency || 8) <= 4 || /iPad|iPhone|iPod|Android/i.test(navigator.userAgent);
+  const Q = LOW_END
+    ? { pixelRatio: 1.3, shadowMap: 2048, softShadow: false, trees: 700, anisotropy: 2 }
+    : { pixelRatio: 1.75, shadowMap: 4096, softShadow: true, trees: 1400, anisotropy: 4 };
+ 
+  // =====================================================================
+  //  루프 생성기 (클로소이드): 곡률이 바닥→정상까지 선형 증가. 실제 루프처럼 진입/탈출이 바닥 위에서 X자 교차
+  // =====================================================================
+  function clothoidLoop(o) {
+    const dir = o.dir || 1, kb = 1 / o.Rb, kt = 1 / o.Rt, L = 2 * Math.PI / (kb + kt), n = 2000, ds = L / n, every = 150;
+    const pts = [], ring = []; let top = [0, -1], left = [1e9, 0], right = [-1e9, 0];
+    let s = 0, x = 0, y = 0, th = 0;
+    for (let i = 0; i <= 2 * n; i++) {
+      if (i % every === 0 || i === 2 * n) {
+        const f = i / (2 * n), px = o.x0 + dir * x, py = o.y0 + y;
+        pts.push([px, py, o.z0 + (o.z1 - o.z0) * f]);
+        ring.push([px + dir * Math.sin(th) * 1.5, py - Math.cos(th) * 1.5]);
+        if (py > top[1]) top = [px, py];
+        if (px < left[0]) left = [px, py];
+        if (px > right[0]) right = [px, py];
+      }
+      const ss = s <= L ? s : 2 * L - s, k = kb + (kt - kb) * ss / L;
+      x += Math.cos(th) * ds; y += Math.sin(th) * ds; th += k * ds; s += ds;
+    }
+    return { pts, ring, top, left, right, zc: (o.z0 + o.z1) / 2 };
   }
-}
+  // 코사인 파형 에어타임 힐 (정상·골 반지름 ≈ 32m)
+  function cosHills(xFrom, xTo, z, dz, period, amp) {
+    const out = []; const step = xFrom > xTo ? -11 : 11;
+    for (let x = xFrom; step < 0 ? x >= xTo : x <= xTo; x += step) out.push([x, 4 + amp / 2 * (1 - Math.cos(2 * Math.PI * Math.abs(x - xFrom) / period)), z + Math.abs(x - xFrom) * dz]);
+    return out;
+  }
  
-function drawStroke(ctx, stroke){
-  const { tool, opacity, width, pts } = stroke;
-  if(!pts || pts.length < 3) return;
-  const n = pts.length / 3;
+  // =====================================================================
+  //  맵 정의
+  // =====================================================================
+  const STATION = [[-45, 4, 0], [-25, 4, 0], [0, 4, 0], [25, 4, 0], [45, 6, 0]];
+  const FINAL_TURN = [[30, 10, 60], [10, 12, 60], [-15, 5, 58], [-45, 5, 56], [-72, 6, 52], [-88, 6, 34], [-88, 5, 18], [-75, 4, 6], [-58, 4, 1]];
  
-  if(tool === 'eraser'){
-    ctx.save();
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    ctx.globalCompositeOperation = 'destination-out';
-    ctx.globalAlpha = 1; ctx.strokeStyle = 'rgba(0,0,0,1)'; ctx.fillStyle = 'rgba(0,0,0,1)';
-    if(n === 1){
-      ctx.beginPath(); ctx.arc(pts[0], pts[1], Math.max(width * 1.1, 0.6), 0, Math.PI * 2); ctx.fill();
-    } else {
-      for(let i = 0; i < n - 1; i++){
-        ctx.lineWidth = width * 2.2;
-        ctx.beginPath(); ctx.moveTo(pts[i*3], pts[i*3+1]); ctx.lineTo(pts[(i+1)*3], pts[(i+1)*3+1]); ctx.stroke();
+  const MAPS = {
+    texpress: {
+      name: 'T-Express', tag: 'Wooden Hybrid', style: 'wood', liftSpeed: 8,
+      desc: '나무 골조 하이브리드. 70m 리프트 → 77° 낙하 → 에어타임 힐 → 360° 루프 → 뱅크 턴 → 버니홉 연속',
+      layout: { x0: -110, x1: 545, z0: -40, z1: 145 }, sunTarget: [215, 0, 60],
+      loops: [{ x0: 360, y0: 4, z0: 15, z1: 22, Rb: 34, Rt: 16 }],
+      rolls: [],
+      build(loops) {
+        return [
+          ...STATION,
+          [70, 20, 0], [100, 36, 0], [130, 52, 0], [152, 65, 0], [164, 70, 0],
+          [172, 67, 0], [176, 59, 0.5], [179, 47, 1], [182, 35, 1.5],
+          [186.4, 24, 2], [192.7, 15.7, 3], [201, 9.4, 4], [210.6, 5.4, 5], [221, 4, 6], [235, 4, 7],
+          [250, 8, 8], [260, 16, 9], [268, 27, 10], [272, 34, 10.5], [290, 42, 11], [308, 34, 11.5], [312, 27, 12], [320, 16, 13], [330, 8, 14], [345, 4, 15], [356, 4, 15],
+          ...loops[0].pts,
+          [394, 4, 23], [404, 5, 24],
+          [412, 9, 25], [420, 15, 26], [428, 20.5, 26.5], [436, 23, 27], [444, 23, 27.5], [452, 20.5, 28], [460, 15, 29], [468, 9, 30], [478, 4.5, 31], [490, 4, 32],
+          [508, 8, 40], [526, 13, 57], [531, 16, 78], [522, 14, 98], [504, 10, 112], [482, 6, 117],
+          ...cosHills(458, 260, 118, -0.03, 90, 13),
+          [240, 5, 112], [205, 7, 105], [170, 8, 97], [135, 7, 86], [100, 6, 75], [60, 5, 66],
+          ...FINAL_TURN,
+        ];
+      }
+    },
+    steel: {
+      name: 'Sky Dragon', tag: 'Steel Coaster', style: 'steel', liftSpeed: 8,
+      desc: '스틸 코스터. 75m 리프트 → 80° 낙하 → 45m 카멜백 → 47m 클로소이드 루프 → 제로-G 롤 → 오버뱅크 턴 → 에어타임 힐 → 연못 위 헬릭스',
+      layout: { x0: -110, x1: 610, z0: -40, z1: 195 }, sunTarget: [250, 0, 80],
+      loops: [{ x0: 384, y0: 4, z0: 8, z1: 15, Rb: 38, Rt: 18 }],
+      rolls: [{ from: [464, 21, 19], to: [500, 21, 21], turns: 1 }],
+      pond: { x: 290, z: 143, r: 24 },
+      build(loops) {
+        const helix = [];
+        for (let k = 0; k <= 8; k++) { const a = k / 8 * Math.PI * 2; helix.push([290 - 35 * Math.sin(a), 6 + 12 * k / 8, 143 - 35 * Math.cos(a)]); }
+        return [
+          ...STATION,
+          [70, 20, 0], [100, 37, 0], [130, 54, 0], [155, 68, 0], [170, 75, 0], [178, 75, 0],       // 리프트 75m
+          [185, 72, 0], [189, 66, 0], [192, 53, 0], [194, 41.2, 0],                                 // 80° 낙하
+          [199.3, 26.5, 0], [206.5, 17.2, 0], [215.8, 10, 0], [226.7, 5.5, 0], [238.3, 4, 0],       // 풀아웃 r=45
+          [251.7, 6.4, 1], [263.7, 13.4, 1.5], [272.6, 24, 2],                                     // 카멜백 상승
+          [279.8, 31, 2.8], [286, 38.4, 3], [294.4, 43.3, 3.3], [304, 45, 3.6], [313.6, 43.3, 4], [322, 38.4, 4.3], [328.2, 31, 4.6], // 정상 r=28 (에어타임)
+          [332.2, 24, 5], [341.1, 13.4, 5.5], [353.1, 6.4, 6], [366.8, 4, 7], [378, 4, 8],          // 하강 + 골 r=40
+          ...loops[0].pts,                                                                            // 360° 루프
+          [418, 4, 16], [432, 5, 17],
+          [447, 12, 18], [462, 21, 19], [482, 24, 20], [502, 21, 21], [517, 12, 22], [532, 5, 23], [547, 4, 24], // 제로-G 롤 힐
+          [567, 8, 30], [584, 14, 46], [590, 18, 66], [582, 16, 86], [564, 10, 100], [542, 6, 106],  // 오버뱅크 턴어라운드
+          ...cosHills(517, 337, 108, 0, 90, 13),                                                      // 에어타임 힐 ×2
+          [325, 5, 108], ...helix,                                                                    // 상승 헬릭스 (연못 둘레, 6→18m)
+          [255, 14, 108], [225, 7, 106], [200, 14, 104], [190, 16, 103], [180, 14, 102], [160, 4, 98],
+          [140, 12, 90], [130, 14, 86], [120, 12, 82], [100, 5, 75], [80, 6, 70], [60, 5, 66],
+          ...FINAL_TURN,
+        ];
       }
     }
-    ctx.restore();
-    return;
-  }
+  };
+  const params = new URLSearchParams(location.search);
+  const mapId = MAPS[params.get('map')] ? params.get('map') : 'texpress';
+  const MAP = MAPS[mapId];
+  const LOOPS = MAP.loops.map(clothoidLoop);
+  document.getElementById('mapTag').textContent = MAP.name.toUpperCase() + ' · ' + MAP.tag.toUpperCase();
+  document.getElementById('ovSub').textContent = MAP.tag;
  
-  const op = opacity != null ? opacity : 1;
-  if(op >= 0.999 || n === 1){
-    ctx.save();
-    ctx.globalCompositeOperation = 'source-over';
-    ctx.globalAlpha = op;
-    paintStrokeShape(ctx, stroke, 0, 0);
-    ctx.restore();
-    return;
-  }
+  // ---------- 기본 설정 ----------
+  const LIFT_SPEED = MAP.liftSpeed;
+  const MIN_SPEED = 3.0;
+  const HEAD_HEIGHT = 1.5;
+  const SEAT_OFFSET = 0.42;
+  const RAIL_GAUGE = 1.2;
+  const SAMPLES = 2800;
+  const CAR_SPACING = 3.3;
+  const CAR_COUNT = 6;
+  const CAMERA_CAR = 1;
  
-  const pad = width * 1.3 + 4;
-  const bbox = strokeBBox(pts, pad);
-  const bw = Math.max(1, Math.ceil(bbox.maxX - bbox.minX));
-  const bh = Math.max(1, Math.ceil(bbox.maxY - bbox.minY));
-  scratchCanvas.width = bw; scratchCanvas.height = bh;
-  scratchCtx.clearRect(0, 0, bw, bh);
-  paintStrokeShape(scratchCtx, stroke, bbox.minX, bbox.minY);
-  ctx.save();
-  ctx.globalCompositeOperation = 'source-over';
-  ctx.globalAlpha = op;
-  ctx.drawImage(scratchCanvas, bbox.minX, bbox.minY);
-  ctx.restore();
-}
+  const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, Q.pixelRatio));
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputEncoding = THREE.sRGBEncoding;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.0;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = Q.softShadow ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+  document.body.appendChild(renderer.domElement);
  
-function redrawCurrentPage(){
-  const page = currentPage();
-  inkCtx.clearRect(0,0,PAGE_W,PAGE_H); overlayCtx.clearRect(0,0,PAGE_W,PAGE_H);
-  updatePageScale();
-  renderTextLayer(page);
-  if(!page) return;
-  page.strokes.forEach(s => drawStroke(inkCtx, s));
-  emptyHint.style.display = page.strokes.length === 0 ? 'block' : 'none';
-}
+  const scene = new THREE.Scene();
+  const HORIZON = col(0xd6e6f3);
+  scene.fog = new THREE.Fog(HORIZON, 300, 1400);
+  const camera = new THREE.PerspectiveCamera(80, window.innerWidth / window.innerHeight, 0.1, 3000);
  
-function getPos(e){
-  const rect = inkCanvas.getBoundingClientRect();
-  const scaleX = PAGE_W / rect.width, scaleY = PAGE_H / rect.height;
-  let pressure = e.pressure;
-  if(pressure === undefined || pressure === 0) pressure = e.pointerType === 'touch' ? 0.6 : 0.5;
-  return { x: (e.clientX - rect.left) * scaleX, y: (e.clientY - rect.top) * scaleY, p: pressure };
-}
-function eraseSegment(prevX, prevY, x, y, w){
-  inkCtx.save();
-  inkCtx.globalCompositeOperation = 'destination-out';
-  inkCtx.lineCap = 'round'; inkCtx.lineJoin = 'round'; inkCtx.lineWidth = w;
-  inkCtx.beginPath();
-  if(prevX !== null){ inkCtx.moveTo(prevX, prevY); inkCtx.lineTo(x, y); }
-  else { inkCtx.arc(x, y, w/2, 0, Math.PI*2); inkCtx.fill(); }
-  inkCtx.stroke();
-  inkCtx.restore();
-}
-function drawLiveOverlay(){
-  overlayCtx.clearRect(0,0,PAGE_W,PAGE_H);
-  const cfg = toolConfigs[currentTool];
-  drawStroke(overlayCtx, { tool: currentTool, color: cfg.color, width: cfg.width, opacity: cfg.opacity != null ? cfg.opacity : 1, pts: currentPts });
-}
-function updateBrushCursor(clientX, clientY, visible){
-  if(!visible){ brushCursor.style.display = 'none'; return; }
-  const rect = inkCanvas.getBoundingClientRect();
-  const cfg = toolConfigs[currentTool];
-  const cssScale = rect.width / PAGE_W;
-  const size = Math.max((currentTool === 'eraser' ? cfg.width * 2.2 : cfg.width) * cssScale, 4);
-  brushCursor.style.display = 'block';
-  brushCursor.style.width = size + 'px'; brushCursor.style.height = size + 'px';
-  brushCursor.style.left = (clientX - rect.left) + 'px'; brushCursor.style.top = (clientY - rect.top) + 'px';
-  brushCursor.style.borderColor = currentTool === 'eraser' ? 'var(--ink-soft)' : cfg.color;
-}
-inkCanvas.addEventListener('pointerdown', (e) => {
-  if(!currentPage() || currentTool === 'text') return;
-  if(e.pointerType === 'touch' && !state.settings.touchDraw) return;
-  if(activePointerId !== null) return;
-  if(e.pointerType === 'pen' && state.settings.touchDraw){
-    state.settings.touchDraw = false;
-    updateTouchActionMode();
-    scheduleSave();
-    showToast('Switched off touch drawing since a stylus was detected.');
-  }
-  e.preventDefault();
-  try{ inkCanvas.setPointerCapture(e.pointerId); }catch(err){}
-  activePointerId = e.pointerId; drawing = true;
-  const pos = getPos(e);
-  if(currentTool === 'eraser'){
-    currentPts = [pos.x, pos.y, pos.p];
-    eraseSegment(null, null, pos.x, pos.y, toolConfigs.eraser.width * 2.2);
-  } else {
-    currentPts = [pos.x, pos.y, pos.p];
-    drawLiveOverlay();
-  }
-  updateBrushCursor(e.clientX, e.clientY, true);
-});
-inkCanvas.addEventListener('pointermove', (e) => {
-  if(e.pointerId !== activePointerId){
-    if(!drawing && currentPage()) updateBrushCursor(e.clientX, e.clientY, true);
-    return;
-  }
-  if(!drawing) return;
-  const pos = getPos(e);
-  if(currentTool === 'eraser'){
-    const lastX = currentPts[currentPts.length - 3], lastY = currentPts[currentPts.length - 2];
-    eraseSegment(lastX, lastY, pos.x, pos.y, toolConfigs.eraser.width * 2.2);
-    currentPts.push(pos.x, pos.y, pos.p);
-  } else {
-    currentPts.push(pos.x, pos.y, pos.p);
-    drawLiveOverlay();
-  }
-  updateBrushCursor(e.clientX, e.clientY, true);
-});
-function endStroke(e){
-  if(e.pointerId !== activePointerId) return;
-  drawing = false; activePointerId = null;
-  const page = currentPage();
-  if(!page){ currentPts = []; return; }
-  if(currentPts.length >= 3){
-    const cfg = toolConfigs[currentTool];
-    const stroke = { tool: currentTool, color: cfg.color, width: cfg.width, opacity: cfg.opacity != null ? cfg.opacity : 1, pts: currentPts };
-    if(currentTool !== 'eraser'){ overlayCtx.clearRect(0,0,PAGE_W,PAGE_H); drawStroke(inkCtx, stroke); }
-    page.strokes.push(stroke);
-    redoStacks[page.id] = [];
-    const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
-    emptyHint.style.display = 'none';
-    scheduleSave();
-    updateUndoRedoButtons();
-  }
-  currentPts = [];
-}
-inkCanvas.addEventListener('pointerup', endStroke);
-inkCanvas.addEventListener('pointercancel', endStroke);
-inkCanvas.addEventListener('pointerleave', () => { brushCursor.style.display = 'none'; });
- 
-function undo(){
-  const page = currentPage(); if(!page || !page.strokes.length) return;
-  const stroke = page.strokes.pop();
-  (redoStacks[page.id] = redoStacks[page.id] || []).push(stroke);
-  redrawCurrentPage();
-  const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
-  scheduleSave(); updateUndoRedoButtons();
-}
-function redo(){
-  const page = currentPage(); if(!page) return;
-  const stack = redoStacks[page.id]; if(!stack || !stack.length) return;
-  page.strokes.push(stack.pop());
-  redrawCurrentPage();
-  const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
-  scheduleSave(); updateUndoRedoButtons();
-}
-function updateUndoRedoButtons(){
-  const page = currentPage();
-  document.getElementById('undoBtn').disabled = !page || page.strokes.length === 0;
-  const stack = page ? redoStacks[page.id] : null;
-  document.getElementById('redoBtn').disabled = !stack || stack.length === 0;
-}
-document.getElementById('undoBtn').addEventListener('click', undo);
-document.getElementById('redoBtn').addEventListener('click', redo);
-document.getElementById('clearPageBtn').addEventListener('click', () => {
-  const page = currentPage(); if(!page || !page.strokes.length) return;
-  openConfirmModal({
-    title: 'Clear this page?', danger: true, confirmLabel: 'Clear',
-    message: 'All ink on this page will be removed. You can undo this right after.',
-    onConfirm: () => {
-      redoStacks[page.id] = page.strokes.slice().reverse();
-      page.strokes = [];
-      const note = getCurrentNote(); if(note) note.updatedAt = Date.now();
-      redrawCurrentPage(); scheduleSave(); updateUndoRedoButtons();
-    }
-  });
-});
- 
-/* ============================= Views ============================= */
-function showView(view){
-  document.getElementById('homeView').style.display = view === 'home' ? 'flex' : 'none';
-  document.getElementById('editorView').style.display = view === 'editor' ? 'flex' : 'none';
-}
-function renderThumbnail(note, w, h){
-  const off = document.createElement('canvas'); off.width = w; off.height = h;
-  const octx = off.getContext('2d');
-  octx.fillStyle = '#fff'; octx.fillRect(0,0,w,h);
-  const cover = note.pages[0];
-  if(cover){
-    octx.save(); octx.scale(w / PAGE_W, h / PAGE_H);
-    cover.strokes.forEach(s => drawStroke(octx, s));
-    (cover.texts || []).forEach(item => {
-      if(!item.content) return;
-      octx.fillStyle = item.color || '#000';
-      octx.font = (item.fontSize || 28) + 'px ' + fontCss(item.fontFamily);
-      octx.textBaseline = 'top';
-      String(item.content).split('\n').forEach((line, i) => {
-        octx.fillText(line, item.x, item.y + i * (item.fontSize || 28) * 1.25);
-      });
+  // ---------- 하늘 ----------
+  {
+    const skyMat = new THREE.ShaderMaterial({
+      side: THREE.BackSide, depthWrite: false, fog: false,
+      uniforms: { top: { value: col(0x3d7fd6) }, mid: { value: col(0x8fbde8) }, bottom: { value: HORIZON } },
+      vertexShader: 'varying vec3 vW; void main(){ vec4 w = modelMatrix * vec4(position,1.0); vW = w.xyz; gl_Position = projectionMatrix * viewMatrix * w; }',
+      fragmentShader: 'uniform vec3 top, mid, bottom; varying vec3 vW; void main(){ float h = normalize(vW).y; vec3 c = h < 0.0 ? bottom : (h < 0.25 ? mix(bottom, mid, smoothstep(0.0, 0.25, h)) : mix(mid, top, smoothstep(0.25, 1.0, h))); gl_FragColor = vec4(c, 1.0);\n#include <tonemapping_fragment>\n#include <encodings_fragment>\n}'
     });
-    octx.restore();
+    scene.add(new THREE.Mesh(new THREE.SphereGeometry(2400, 32, 16), skyMat));
   }
-  return off.toDataURL('image/png');
-}
-function renderHome(){
-  const grid = document.getElementById('notesGrid');
-  const emptyState = document.getElementById('homeEmptyState');
-  grid.innerHTML = '';
-  if(!state.notes.length){ emptyState.style.display = 'flex'; grid.style.display = 'none'; return; }
-  emptyState.style.display = 'none'; grid.style.display = 'grid';
-  state.notes.slice().sort((a,b) => b.updatedAt - a.updatedAt).forEach(note => grid.appendChild(renderNoteCard(note)));
-}
-function renderNoteCard(note){
-  const wrap = document.createElement('div'); wrap.className = 'note-card-wrap';
-  const card = document.createElement('div'); card.className = 'note-card';
-  const img = document.createElement('img'); img.alt = '';
-  img.src = renderThumbnail(note, 300, Math.round(300 * PAGE_H / PAGE_W));
-  card.appendChild(img);
-  const kebab = document.createElement('button'); kebab.className = 'card-kebab'; kebab.type = 'button';
-  kebab.title = 'Note options';
-  kebab.innerHTML = KEBAB_ICON;
-  kebab.addEventListener('click', (e) => {
-    e.stopPropagation();
-    openItemMenu(kebab, [
-      { label: 'Add page', icon: PLUS_ICON, onClick: () => {
-        const pg = freshPage();
-        note.pages.push(pg);
-        note.updatedAt = Date.now();
-        scheduleSave();
-        showToast('Page added to "' + note.name + '".', 'success');
-      }},
-      { label: 'Delete note', icon: TRASH_ICON, danger: true, onClick: () => {
-        openConfirmModal({
-          title: 'Delete note?', danger: true, confirmLabel: 'Delete',
-          message: `"${note.name}" will be permanently deleted.`,
-          onConfirm: () => deleteNote(note)
-        });
-      }}
-    ]);
-  });
-  card.appendChild(kebab);
-  card.addEventListener('click', () => openEditor(note.id));
-  wrap.appendChild(card);
-  const nameInput = document.createElement('input');
-  nameInput.type = 'text'; nameInput.className = 'note-name-input'; nameInput.value = note.name;
-  nameInput.addEventListener('click', e => e.stopPropagation());
-  nameInput.addEventListener('pointerdown', e => e.stopPropagation());
-  nameInput.addEventListener('blur', () => {
-    note.name = nameInput.value.trim() || 'Untitled note'; nameInput.value = note.name; note.updatedAt = Date.now(); scheduleSave();
-  });
-  nameInput.addEventListener('keydown', e => { if(e.key === 'Enter') nameInput.blur(); });
-  wrap.appendChild(nameInput);
-  return wrap;
-}
-function createNote(){
-  openTemplatePicker((templateId) => {
-    const note = freshNote('Untitled note', templateId);
-    state.notes.push(note);
-    scheduleSave();
-    openEditor(note.id, note.pages[0].id);
-  });
-}
-function deleteNote(note){
-  state.notes = state.notes.filter(n => n.id !== note.id);
-  note.pages.forEach(p => delete redoStacks[p.id]);
-  if(currentNoteId === note.id){ currentNoteId = null; currentPageId = null; showView('home'); }
-  renderHome(); scheduleSave();
-}
-function openEditor(noteId, pageId){
-  currentNoteId = noteId;
-  const note = getCurrentNote();
-  if(!note) return;
-  currentPageId = pageId || (note.pages[0] && note.pages[0].id);
-  showView('editor');
-  document.getElementById('pageSurface').className = 'page-surface tpl-' + (note.template || 'dots');
-  updateTouchActionMode();
-  resetZoom();
-  setCanvasSize();
-  redrawCurrentPage();
-  document.getElementById('noteTitle').textContent = note.name;
-  updateUndoRedoButtons();
-  updatePageNavUI();
-  setActiveTool(currentTool);
-}
-document.getElementById('newNoteBtn').addEventListener('click', createNote);
-document.getElementById('emptyNewNoteBtn').addEventListener('click', createNote);
-document.getElementById('backBtn').addEventListener('click', () => { showView('home'); renderHome(); });
-document.getElementById('noteTitle').addEventListener('blur', () => {
-  const note = getCurrentNote(); if(!note) return;
-  const val = document.getElementById('noteTitle').textContent.trim();
-  note.name = val || 'Untitled note'; note.updatedAt = Date.now();
-  document.getElementById('noteTitle').textContent = note.name;
-  scheduleSave();
-});
-document.getElementById('noteTitle').addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); document.getElementById('noteTitle').blur(); } });
-document.getElementById('deleteNoteBtn').addEventListener('click', () => {
-  const note = getCurrentNote(); if(!note) return;
-  openConfirmModal({
-    title: 'Delete note?', danger: true, confirmLabel: 'Delete',
-    message: `"${note.name}" and all its pages will be permanently deleted.`,
-    onConfirm: () => deleteNote(note)
-  });
-});
  
-/* ---- Page navigation ---- */
-function updatePageNavUI(){
-  const note = getCurrentNote(); if(!note) return;
-  const idx = note.pages.findIndex(p => p.id === currentPageId);
-  document.getElementById('pageIndicator').textContent = `Page ${idx + 1} of ${note.pages.length}`;
-  document.getElementById('prevPageBtn').disabled = idx <= 0;
-  document.getElementById('nextPageBtn').disabled = idx >= note.pages.length - 1;
-  document.getElementById('deletePageBtn').disabled = note.pages.length <= 1;
-}
-function goToPage(delta){
-  const note = getCurrentNote(); if(!note) return;
-  const idx = note.pages.findIndex(p => p.id === currentPageId);
-  const newIdx = idx + delta;
-  if(newIdx < 0 || newIdx >= note.pages.length) return;
-  currentPageId = note.pages[newIdx].id;
-  resetZoom(); setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI();
-}
-document.getElementById('prevPageBtn').addEventListener('click', () => goToPage(-1));
-document.getElementById('nextPageBtn').addEventListener('click', () => goToPage(1));
-document.getElementById('addPageBtn').addEventListener('click', () => {
-  const note = getCurrentNote(); if(!note) return;
-  const pg = freshPage();
-  const idx = note.pages.findIndex(p => p.id === currentPageId);
-  note.pages.splice(idx + 1, 0, pg);
-  currentPageId = pg.id;
-  note.updatedAt = Date.now();
-  resetZoom(); setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); scheduleSave();
-});
-document.getElementById('deletePageBtn').addEventListener('click', () => {
-  const note = getCurrentNote(); if(!note || note.pages.length <= 1) return;
-  openConfirmModal({
-    title: 'Delete this page?', danger: true, confirmLabel: 'Delete',
-    message: 'This page will be permanently deleted.',
-    onConfirm: () => {
-      const idx = note.pages.findIndex(p => p.id === currentPageId);
-      delete redoStacks[currentPageId];
-      note.pages.splice(idx, 1);
-      currentPageId = note.pages[Math.max(0, idx - 1)].id;
-      note.updatedAt = Date.now();
-      resetZoom(); setCanvasSize(); redrawCurrentPage(); updateUndoRedoButtons(); updatePageNavUI(); scheduleSave();
+  // ---------- 조명 ----------
+  scene.add(new THREE.HemisphereLight(0xcfe3f5, 0x6b7a4a, 0.75));
+  const sun = new THREE.DirectionalLight(0xfff1dc, 1.35);
+  sun.position.set(-260, 420, -180);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(Q.shadowMap, Q.shadowMap);
+  sun.shadow.camera.near = 50; sun.shadow.camera.far = 1300;
+  const SH = (MAP.layout.x1 - MAP.layout.x0) * 0.62;
+  sun.shadow.camera.left = -SH; sun.shadow.camera.right = SH; sun.shadow.camera.top = SH; sun.shadow.camera.bottom = -SH;
+  sun.shadow.bias = -0.0006; sun.shadow.normalBias = 0.4;
+  sun.target.position.set(...MAP.sunTarget);
+  scene.add(sun, sun.target);
+ 
+  // ---------- 절차적 텍스처 ----------
+  function woodTexture(base, dark, w, h) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const g = c.getContext('2d');
+    g.fillStyle = base; g.fillRect(0, 0, w, h);
+    let seed = 3; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 140; i++) {
+      g.strokeStyle = dark; g.globalAlpha = 0.05 + rnd() * 0.16; g.lineWidth = 0.5 + rnd() * 2.2;
+      const x = rnd() * w; g.beginPath(); g.moveTo(x, 0);
+      for (let y = 0; y <= h; y += 16) g.lineTo(x + Math.sin(y * 0.03 + i) * 3 + (rnd() - 0.5) * 2, y);
+      g.stroke();
     }
-  });
-});
- 
-/* ============================= Toolbar ============================= */
-function setActiveTool(tool){
-  if(currentTool === 'text' && tool !== 'text' && document.activeElement && document.activeElement.classList.contains('text-item-editable')){
-    document.activeElement.blur();
+    g.globalAlpha = 1;
+    const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = Q.anisotropy; return t;
   }
-  currentTool = tool;
-  document.querySelectorAll('.tool-btn').forEach(b => b.classList.toggle('active', b.dataset.tool === tool));
-  document.getElementById('textLayer').classList.toggle('tool-active', tool === 'text');
-  renderStyleRow();
-}
-document.querySelectorAll('.tool-btn').forEach(btn => {
-  // preventDefault on pointerdown stops the button taking focus (which would
-  // blur an open text box mid-tap on mobile); click still fires normally.
-  btn.addEventListener('pointerdown', (e) => e.preventDefault());
-  btn.addEventListener('click', () => setActiveTool(btn.dataset.tool));
-});
+  const woodTex = woodTexture('#b58a55', '#5a3a1c', 256, 512);
+  const woodTexDark = woodTexture('#8f6a3f', '#3e2812', 256, 512);
  
-function isColorTool(tool){ return tool === 'pen' || tool === 'paintbrush' || tool === 'highlighter' || tool === 'text'; }
-function renderStyleRow(){
-  const row = document.getElementById('styleRow');
-  const swatchRow = document.getElementById('swatchRow');
-  const colorInputWrap = document.getElementById('customColorInput');
-  const hexInput = document.getElementById('hexColorInput');
-  row.classList.add('visible');
-  const showColor = isColorTool(currentTool);
-  swatchRow.style.display = showColor ? 'flex' : 'none';
-  colorInputWrap.style.display = showColor ? 'inline-block' : 'none';
-  hexInput.style.display = showColor ? 'inline-block' : 'none';
+  // =====================================================================
+  //  트랙 곡선 + 샘플링
+  // =====================================================================
+  const controlPoints = MAP.build(LOOPS).map(p => new THREE.Vector3(p[0], p[1], p[2]));
+  const curve = new THREE.CatmullRomCurve3(controlPoints, true, 'centripetal');
+  curve.arcLengthDivisions = 8000;
+  const TRACK_LENGTH = curve.getLength();
+  const DS = TRACK_LENGTH / SAMPLES;
  
-  swatchRow.innerHTML = '';
-  if(showColor){
-    const cfg = toolConfigs[currentTool];
-    COLORS.forEach(c => {
-      const b = document.createElement('button');
-      b.className = 'swatch' + (cfg.color.toLowerCase() === c.toLowerCase() ? ' active' : '');
-      b.style.background = c; b.title = c;
-      b.addEventListener('click', () => { toolConfigs[currentTool].color = c; renderStyleRow(); });
-      swatchRow.appendChild(b);
-    });
-    colorInputWrap.value = cfg.color;
-    if(document.activeElement !== hexInput) hexInput.value = cfg.color;
+  const P = [], T = [], UP = [], KAPPA = [];
+  for (let i = 0; i < SAMPLES; i++) { const u = i / SAMPLES; P.push(curve.getPointAt(u)); T.push(curve.getTangentAt(u).normalize()); }
+  let MAX_Y = 0; P.forEach(p => { if (p.y > MAX_Y) MAX_Y = p.y; });
+  const rawK = [];
+  for (let i = 0; i < SAMPLES; i++) {
+    const a = T[(i - 1 + SAMPLES) % SAMPLES], b = T[(i + 1) % SAMPLES];
+    rawK.push(new THREE.Vector3().subVectors(b, a).multiplyScalar(1 / (2 * DS)));
   }
-  const range = WIDTH_RANGES[currentTool];
-  const slider = document.getElementById('widthSlider');
-  slider.min = range.min; slider.max = range.max; slider.step = 0.5;
-  slider.value = toolConfigs[currentTool].width;
-  document.getElementById('widthValue').textContent = Math.round(toolConfigs[currentTool].width) + 'px';
+  const SMOOTH = 8;
+  for (let i = 0; i < SAMPLES; i++) {
+    const k = new THREE.Vector3();
+    for (let j = -SMOOTH; j <= SMOOTH; j++) k.add(rawK[(i + j + SAMPLES) % SAMPLES]);
+    KAPPA.push(k.multiplyScalar(1 / (2 * SMOOTH + 1)));
+  }
+  let liftEndIndex = 0;
+  for (let i = 1; i < SAMPLES * 0.3; i++) if (P[i].y > P[liftEndIndex].y) liftEndIndex = i;
+  const LIFT_END_S = liftEndIndex * DS;
  
-  // Font picker: text tool only.
-  const fontSelect = document.getElementById('fontSelect');
-  if(currentTool === 'text'){
-    fontSelect.style.display = 'inline-block';
-    if(!fontSelect.options.length){
-      FONTS.forEach(f => {
-        const opt = document.createElement('option');
-        opt.value = f.id; opt.textContent = f.label; opt.style.fontFamily = f.css;
-        fontSelect.appendChild(opt);
-      });
+  const _tan = new THREE.Vector3();
+  function tangentAt(s) {
+    s = ((s % TRACK_LENGTH) + TRACK_LENGTH) % TRACK_LENGTH;
+    const f = s / DS, i0 = Math.floor(f) % SAMPLES, i1 = (i0 + 1) % SAMPLES;
+    return _tan.lerpVectors(T[i0], T[i1], f - Math.floor(f)).normalize();
+  }
+ 
+  // ---------- 물리 ----------
+  const TRAIN_COM = (CAR_COUNT - 1) * CAR_SPACING / 2;
+  function stepPhysics(st, dt) {
+    if (st.s < LIFT_END_S + 2) {
+      st.v = st.v < LIFT_SPEED ? Math.min(st.v + 3 * dt, LIFT_SPEED) : Math.max(st.v - 6 * dt, LIFT_SPEED);
+    } else {
+      const ty = tangentAt(st.s - TRAIN_COM).y;
+      st.v += (-G * ty - 0.0005 * st.v * st.v - 0.05) * dt;
+      if (TRACK_LENGTH - st.s < 90) st.v = Math.max(LIFT_SPEED, st.v - 10 * dt);
+      if (st.v < MIN_SPEED) st.v = MIN_SPEED;
     }
-    fontSelect.value = toolConfigs.text.fontFamily || 'sans';
-    fontSelect.style.fontFamily = fontCss(fontSelect.value);
-  } else {
-    fontSelect.style.display = 'none';
+    st.s += st.v * dt;
+    if (st.s >= TRACK_LENGTH) { st.s -= TRACK_LENGTH; st.lap++; }
   }
-}
-document.getElementById('fontSelect').addEventListener('change', (e) => {
-  toolConfigs.text.fontFamily = e.target.value;
-  e.target.style.fontFamily = fontCss(e.target.value);
-  // If a text box is being edited, restyle it live.
-  const focused = document.activeElement;
-  if(focused && focused.classList.contains('text-item-editable')){
-    const page = currentPage();
-    const id = focused.parentElement && focused.parentElement.dataset.textId;
-    const item = page && (page.texts || []).find(t => t.id === id);
-    if(item){
-      item.fontFamily = e.target.value;
-      focused.style.fontFamily = fontCss(item.fontFamily);
-      touchNote();
+  const VS = new Float32Array(SAMPLES);
+  let MAX_V = 0, LAP_TIME = 0;
+  {
+    const sim = { s: 0, v: LIFT_SPEED, lap: 1 };
+    let idx = 0, guard = 0;
+    while (idx < SAMPLES && guard++ < 800000) {
+      stepPhysics(sim, 1 / 120); LAP_TIME += 1 / 120; MAX_V = Math.max(MAX_V, sim.v);
+      if (sim.lap > 1) { while (idx < SAMPLES) VS[idx++] = sim.v; break; }
+      while (idx < SAMPLES && sim.s >= idx * DS) VS[idx++] = sim.v;
     }
   }
-});
-document.getElementById('widthSlider').addEventListener('input', (e) => {
-  toolConfigs[currentTool].width = parseFloat(e.target.value);
-  document.getElementById('widthValue').textContent = Math.round(toolConfigs[currentTool].width) + 'px';
-});
-document.getElementById('customColorInput').addEventListener('input', (e) => {
-  if(isColorTool(currentTool)){
-    toolConfigs[currentTool].color = e.target.value; renderStyleRow();
-  }
-});
-function applyHexInput(){
-  const hexInput = document.getElementById('hexColorInput');
-  let v = hexInput.value.trim();
-  if(!v) return;
-  if(!v.startsWith('#')) v = '#' + v;
-  if(/^#[0-9A-Fa-f]{6}$/.test(v) && isColorTool(currentTool)){
-    toolConfigs[currentTool].color = v;
-    renderStyleRow();
-  } else {
-    showToast('Enter a 6-digit hex color, like #1FA9E0.', 'error');
-    hexInput.value = toolConfigs[currentTool].color;
-  }
-}
-document.getElementById('hexColorInput').addEventListener('change', applyHexInput);
-document.getElementById('hexColorInput').addEventListener('keydown', (e) => { if(e.key === 'Enter') e.target.blur(); });
  
-/* ============================= Settings ============================= */
-document.getElementById('settingsBtn').addEventListener('click', (e) => {
-  e.stopPropagation();
-  document.getElementById('touchDrawToggle').checked = state.settings.touchDraw;
-  const r = e.currentTarget.getBoundingClientRect();
-  settingsPopover.style.top = (r.bottom + 6) + 'px';
-  settingsPopover.style.left = Math.max(8, Math.min(r.left - 150, window.innerWidth - 240)) + 'px';
-  settingsPopover.classList.toggle('open');
-});
-document.getElementById('touchDrawToggle').addEventListener('change', (e) => { state.settings.touchDraw = e.target.checked; updateTouchActionMode(); scheduleSave(); });
-document.getElementById('clearDataBtn').addEventListener('click', () => {
-  settingsPopover.classList.remove('open');
-  openConfirmModal({
-    title: 'Erase all data?', danger: true, confirmLabel: 'Erase everything',
-    message: 'Every note in Fly Notes will be permanently deleted. This cannot be undone.',
-    onConfirm: async () => {
-      state = defaultState(); currentNoteId = null; currentPageId = null;
-      await saveState();
-      showView('home'); renderHome();
-      showToast('All data erased.', 'success');
+  // ---------- 기준 프레임 + 뱅킹 + 롤 ----------
+  const worldUp = new THREE.Vector3(0, 1, 0);
+  const REF = [];
+  {
+    let u = worldUp.clone().addScaledVector(T[0], -worldUp.dot(T[0])).normalize();
+    const target = new THREE.Vector3();
+    for (let i = 0; i < SAMPLES; i++) {
+      u = u.clone().addScaledVector(T[i], -u.dot(T[i]));
+      if (u.lengthSq() < 1e-8) u = REF[i - 1].clone();
+      u.normalize();
+      target.copy(worldUp).addScaledVector(T[i], -worldUp.dot(T[i]));
+      const len = target.length();
+      if (len > 0.3 && u.dot(target) > 0) { target.multiplyScalar(1 / len); u.lerp(target, 0.05).addScaledVector(T[i], -u.dot(T[i])).normalize(); }
+      REF.push(u);
     }
+    const uEnd = REF[SAMPLES - 1].clone().addScaledVector(T[0], -REF[SAMPLES - 1].dot(T[0])).normalize();
+    const twist = Math.atan2(new THREE.Vector3().crossVectors(uEnd, REF[0]).dot(T[0]), uEnd.dot(REF[0]));
+    for (let i = 0; i < SAMPLES; i++) REF[i].applyAxisAngle(T[i], twist * i / SAMPLES).normalize();
+  }
+  const bank = new Float32Array(SAMPLES);
+  for (let i = 0; i < SAMPLES; i++) {
+    const v2 = Math.max(VS[i] * VS[i], 9);
+    const felt = new THREE.Vector3(0, G, 0).addScaledVector(KAPPA[i], v2);
+    const right = new THREE.Vector3().crossVectors(T[i], REF[i]).normalize();
+    const phi = Math.atan2(felt.dot(right), Math.max(felt.dot(REF[i]), 2.5));
+    bank[i] = Math.max(-1.3, Math.min(1.3, phi));
+  }
+  // 롤 구간 (제로-G 롤 등): 지정 구간에서 트랙을 진행 방향 축으로 360° 회전
+  const nearestIndex = pt => { let best = 0, bd = 1e18; for (let i = 0; i < SAMPLES; i++) { const d = P[i].distanceToSquared(new THREE.Vector3(pt[0], pt[1], pt[2])); if (d < bd) { bd = d; best = i; } } return best; };
+  for (const r of MAP.rolls) {
+    const i0 = nearestIndex(r.from), i1 = nearestIndex(r.to);
+    for (let i = i0; i <= i1; i++) { const t = (i - i0) / (i1 - i0), e = t * t * (3 - 2 * t); bank[i] += r.turns * Math.PI * 2 * e; }
+    for (let i = i1 + 1; i < SAMPLES; i++) bank[i] += r.turns * Math.PI * 2;   // 이후 구간은 한 바퀴 돈 상태 유지 (= 원래 자세)
+  }
+  for (let pass = 0; pass < 2; pass++) {
+    const sm = new Float32Array(SAMPLES);
+    for (let i = 0; i < SAMPLES; i++) { let a = 0; for (let j = -10; j <= 10; j++) a += bank[(i + j + SAMPLES) % SAMPLES] + (i + j >= SAMPLES ? MAP.rolls.reduce((q, r) => q + r.turns, 0) * Math.PI * 2 : (i + j < 0 ? -MAP.rolls.reduce((q, r) => q + r.turns, 0) * Math.PI * 2 : 0)); sm[i] = a / 21; }
+    bank.set(sm);
+  }
+  for (let i = 0; i < SAMPLES; i++) UP.push(REF[i].clone().applyAxisAngle(T[i], bank[i]).normalize());
+  const RIGHT = UP.map((u, i) => new THREE.Vector3().crossVectors(T[i], u).normalize());
+ 
+  function newFrame() { return { pos: new THREE.Vector3(), tan: new THREE.Vector3(), up: new THREE.Vector3(), right: new THREE.Vector3(), kappa: new THREE.Vector3() }; }
+  const frame = newFrame();
+  function getFrame(s, out) {
+    out = out || frame;
+    s = ((s % TRACK_LENGTH) + TRACK_LENGTH) % TRACK_LENGTH;
+    const f = s / DS, i0 = Math.floor(f) % SAMPLES, i1 = (i0 + 1) % SAMPLES, t = f - Math.floor(f);
+    out.pos.lerpVectors(P[i0], P[i1], t);
+    out.tan.lerpVectors(T[i0], T[i1], t).normalize();
+    out.up.lerpVectors(UP[i0], UP[i1], t);
+    out.up.addScaledVector(out.tan, -out.up.dot(out.tan)).normalize();
+    out.right.crossVectors(out.tan, out.up).normalize();
+    out.kappa.lerpVectors(KAPPA[i0], KAPPA[i1], t);
+    return out;
+  }
+ 
+  // =====================================================================
+  //  지형
+  // =====================================================================
+  const LAYOUT = MAP.layout;
+  function terrainHeight(x, z) {
+    const dx = Math.max(LAYOUT.x0 - x, 0, x - LAYOUT.x1), dz = Math.max(LAYOUT.z0 - z, 0, z - LAYOUT.z1);
+    const d = Math.sqrt(dx * dx + dz * dz);
+    const ramp = Math.min(1, Math.max(0, (d - 30) / 260)), ramp2 = ramp * ramp * (3 - 2 * ramp);
+    const n = 28 * Math.sin(x * 0.011 + 1.3) * Math.cos(z * 0.013 + 0.4) + 16 * Math.sin(x * 0.027 + z * 0.019) + 8 * Math.sin(z * 0.05 - x * 0.031) + 22;
+    const far = Math.min(1, Math.max(0, (d - 500) / 700));
+    return ramp2 * Math.max(0, n) + far * far * 120 * (0.6 + 0.4 * Math.sin(x * 0.006) * Math.cos(z * 0.007));
+  }
+  {
+    const SIZE = 3800, SEG = 230, CX = (LAYOUT.x0 + LAYOUT.x1) / 2, CZ = (LAYOUT.z0 + LAYOUT.z1) / 2;
+    const geo = new THREE.PlaneGeometry(SIZE, SIZE, SEG, SEG);
+    geo.rotateX(-Math.PI / 2);
+    const pos = geo.attributes.position, colors = new Float32Array(pos.count * 3);
+    const cLow = col(0x55803a), cHigh = col(0x8d9a58), cDark = col(0x45702f), tmpC = new THREE.Color();
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i) + CX, z = pos.getZ(i) + CZ, h = terrainHeight(x, z);
+      pos.setXYZ(i, x, h, z);
+      const patch = 0.5 + 0.5 * Math.sin(x * 0.07 + z * 0.05) * Math.sin(x * 0.023 - z * 0.041);
+      tmpC.copy(cLow).lerp(cHigh, Math.min(1, h / 60)).lerp(cDark, patch * 0.35);
+      colors[i * 3] = tmpC.r; colors[i * 3 + 1] = tmpC.g; colors[i * 3 + 2] = tmpC.b;
+    }
+    geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+    geo.computeVertexNormals();
+    const ground = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 1 }));
+    ground.position.y = -0.05; ground.receiveShadow = true;
+    scene.add(ground);
+  }
+  if (MAP.pond) {
+    const pond = new THREE.Mesh(new THREE.CircleGeometry(MAP.pond.r, 48), new THREE.MeshStandardMaterial({ color: col(0x3f7fb5), metalness: 0.5, roughness: 0.15 }));
+    pond.rotation.x = -Math.PI / 2; pond.position.set(MAP.pond.x, 0.04, MAP.pond.z); pond.receiveShadow = true;
+    scene.add(pond);
+    const rim = new THREE.Mesh(new THREE.RingGeometry(MAP.pond.r, MAP.pond.r + 2.5, 48), new THREE.MeshStandardMaterial({ color: col(0xc9b58a), roughness: 1 }));
+    rim.rotation.x = -Math.PI / 2; rim.position.set(MAP.pond.x, 0.02, MAP.pond.z);
+    scene.add(rim);
+  }
+ 
+  // =====================================================================
+  //  트랙 지오메트리 (스윕) + 인스턴스 헬퍼
+  // =====================================================================
+  const trackGroup = new THREE.Group();
+  scene.add(trackGroup);
+  function sweep(profile, material, uRepeat) {
+    const n = profile.length, ringVerts = n * 2, rings = SAMPLES + 1;
+    const positions = new Float32Array(rings * ringVerts * 3), uvs = new Float32Array(rings * ringVerts * 2);
+    const indices = new Uint32Array(SAMPLES * n * 6);
+    const p = new THREE.Vector3();
+    for (let i = 0; i < rings; i++) {
+      const k = i % SAMPLES;
+      for (let e = 0; e < n; e++) {
+        const a = profile[e], b = profile[(e + 1) % n];
+        for (let q = 0; q < 2; q++) {
+          const pr = q ? b : a;
+          p.copy(P[k]).addScaledVector(RIGHT[k], pr[0]).addScaledVector(UP[k], pr[1]);
+          const vi = i * ringVerts + e * 2 + q;
+          positions[vi * 3] = p.x; positions[vi * 3 + 1] = p.y; positions[vi * 3 + 2] = p.z;
+          uvs[vi * 2] = i * DS * uRepeat; uvs[vi * 2 + 1] = q;
+        }
+      }
+    }
+    let ii = 0;
+    for (let i = 0; i < SAMPLES; i++) for (let e = 0; e < n; e++) {
+      const a0 = i * ringVerts + e * 2, a1 = a0 + 1, b0 = (i + 1) * ringVerts + e * 2, b1 = b0 + 1;
+      indices[ii++] = a0; indices[ii++] = b1; indices[ii++] = b0; indices[ii++] = a0; indices[ii++] = a1; indices[ii++] = b1;
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    geo.setAttribute('uv', new THREE.BufferAttribute(uvs, 2));
+    geo.setIndex(new THREE.BufferAttribute(indices, 1));
+    geo.computeVertexNormals();
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    return mesh;
+  }
+  const rect = (cx, cy, w, h) => [[cx - w / 2, cy - h / 2], [cx - w / 2, cy + h / 2], [cx + w / 2, cy + h / 2], [cx + w / 2, cy - h / 2]];
+  const octa = (cx, cy, r) => { const o = []; for (let k = 0; k < 8; k++) { const a = -k / 8 * Math.PI * 2; o.push([cx + Math.cos(a) * r, cy + Math.sin(a) * r]); } return o; };
+ 
+  const unitBox = new THREE.BoxGeometry(1, 1, 1);
+  const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3(), _mid = new THREE.Vector3(), _dir = new THREE.Vector3();
+  const _basis = new THREE.Matrix4(), _x = new THREE.Vector3(), _z = new THREE.Vector3();
+  function beamMatrix(a, b, tw, th) {
+    _dir.subVectors(b, a); const len = _dir.length(); _dir.normalize();
+    _mid.addVectors(a, b).multiplyScalar(0.5);
+    _x.set(0, 1, 0); if (Math.abs(_dir.y) > 0.95) _x.set(1, 0, 0);
+    _z.crossVectors(_dir, _x).normalize(); _x.crossVectors(_z, _dir).normalize();
+    _basis.makeBasis(_x, _dir, _z); _q.setFromRotationMatrix(_basis);
+    _s.set(tw, len, th);
+    return _m.compose(_mid, _q, _s);
+  }
+  function makeInstanced(list, material, hue, sat, light) {
+    const mesh = new THREE.InstancedMesh(unitBox, material, list.length);
+    const c = new THREE.Color();
+    for (let i = 0; i < list.length; i++) {
+      mesh.setMatrixAt(i, list[i].m);
+      c.setHSL(hue + (list[i].h || 0) * 0.02, sat, light + (list[i].l || 0) * 0.08).convertSRGBToLinear();
+      mesh.setColorAt(i, c);
+    }
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    return mesh;
+  }
+  // 기둥을 세울 때 그 아래로 다른 트랙이 지나가면(교차 구간) 생략
+  function trackBelow(i) {
+    const p = P[i];
+    for (let j = 0; j < SAMPLES; j += 3) {
+      if (Math.abs(j - i) < 40) continue;
+      const q = P[j]; if (q.y < p.y - 2.5 && (q.x - p.x) * (q.x - p.x) + (q.z - p.z) * (q.z - p.z) < 3.2 * 3.2) return true;
+    }
+    return false;
+  }
+ 
+  // =====================================================================
+  //  우든 트랙 + 트레슬
+  // =====================================================================
+  function buildWood() {
+    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.85 });
+    const woodMatDark = new THREE.MeshStandardMaterial({ map: woodTexDark, roughness: 0.9 });
+    const steelMat = new THREE.MeshStandardMaterial({ color: col(0x8a8f96), metalness: 0.85, roughness: 0.35 });
+    const g = RAIL_GAUGE / 2;
+    trackGroup.add(sweep(rect(-g, -0.24, 0.3, 0.4), woodMat, 0.12));
+    trackGroup.add(sweep(rect(g, -0.24, 0.3, 0.4), woodMat, 0.12));
+    trackGroup.add(sweep(rect(-g, -0.02, 0.14, 0.06), steelMat, 0.05));
+    trackGroup.add(sweep(rect(g, -0.02, 0.14, 0.06), steelMat, 0.05));
+    trackGroup.add(sweep(rect(-g - 0.36, -0.13, 0.06, 0.2), steelMat, 0.05));
+    trackGroup.add(sweep(rect(g + 0.36, -0.13, 0.06, 0.2), steelMat, 0.05));
+    trackGroup.add(sweep(rect(1.45, -0.42, 0.7, 0.05), woodMatDark, 0.12));
+    trackGroup.add(sweep(rect(1.8, 0.55, 0.06, 0.06), woodMatDark, 0.2));
+    trackGroup.add(sweep(rect(0, -0.56, 2.9, 0.16), woodMatDark, 0.12));
+    // 침목
+    {
+      const list = [], step = Math.max(1, Math.round(1.1 / DS)), a = new THREE.Vector3(), b = new THREE.Vector3();
+      let seed = 11; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let i = 0; i < SAMPLES; i += step) {
+        a.copy(P[i]).addScaledVector(UP[i], -0.47).addScaledVector(RIGHT[i], -1.25);
+        b.copy(P[i]).addScaledVector(UP[i], -0.47).addScaledVector(RIGHT[i], 1.9);
+        list.push({ m: beamMatrix(a, b, 0.18, 0.14).clone(), h: rnd() - 0.5, l: rnd() - 0.5 });
+      }
+      trackGroup.add(makeInstanced(list, new THREE.MeshStandardMaterial({ roughness: 0.9 }), 0.085, 0.36, 0.44));
+    }
+    // 트레슬(벤트)
+    {
+      const list = [];
+      let seed = 5; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      const push = (a, b, tw, th) => list.push({ m: beamMatrix(a, b, tw, th).clone(), h: rnd() - 0.5, l: rnd() - 0.5 });
+      const BENT_STEP = Math.max(1, Math.round(3.6 / DS)), bents = [], hRight = new THREE.Vector3();
+      for (let i = 0; i < SAMPLES; i += BENT_STEP) {
+        const top = P[i].clone().addScaledVector(UP[i], -0.62);
+        const groundY = terrainHeight(P[i].x, P[i].z), h = top.y - groundY;
+        if (h < 0.8 || UP[i].y < 0.55 || trackBelow(i)) { bents.push(null); continue; }
+        hRight.set(T[i].z, 0, -T[i].x).normalize();
+        const spread = 1.05 + h * 0.055, legs = [];
+        for (const side of [-1, 1]) {
+          const topP = top.clone().addScaledVector(hRight, side * 1.05);
+          const botP = new THREE.Vector3(P[i].x + hRight.x * side * spread, groundY - 0.3, P[i].z + hRight.z * side * spread);
+          push(botP, topP, 0.28, 0.28);
+          legs.push({ topP, botP });
+          list.push({ m: new THREE.Matrix4().compose(new THREE.Vector3(botP.x, groundY + 0.15, botP.z), new THREE.Quaternion(), new THREE.Vector3(0.7, 0.35, 0.7)), h: -3, l: 2.5 });
+        }
+        const levels = [];
+        for (let y = groundY + 1.6; y < top.y - 1.2; y += 3.6) levels.push(y);
+        levels.push(top.y - 0.7);
+        const at = (leg, y) => leg.botP.clone().lerp(leg.topP, (y - leg.botP.y) / (leg.topP.y - leg.botP.y));
+        for (let li = 0; li < levels.length; li++) {
+          const y = levels[li], L = at(legs[0], y), R = at(legs[1], y);
+          push(L, R, 0.22, 0.14);
+          if (li > 0) {
+            const Lp = at(legs[0], levels[li - 1]), Rp = at(legs[1], levels[li - 1]);
+            if ((li + Math.floor(i / BENT_STEP)) % 2) push(Lp, R, 0.12, 0.16); else push(Rp, L, 0.12, 0.16);
+          }
+        }
+        bents.push({ legs, at });
+      }
+      for (let b = 0; b < bents.length; b++) {
+        const A = bents[b], B = bents[(b + 1) % bents.length];
+        if (!A || !B) continue;
+        if (A.legs[0].topP.distanceTo(B.legs[0].topP) > 9) continue;
+        for (const side of [0, 1]) {
+          const la = A.legs[side], lb = B.legs[side];
+          const yMin = Math.max(la.botP.y, lb.botP.y) + 1.6, yMax = Math.min(la.topP.y, lb.topP.y) - 0.6;
+          let prev = null;
+          for (let y = yMin; y < yMax; y += 3.6) {
+            const a = A.at(la, y), c = B.at(lb, y);
+            push(a, c, 0.16, 0.14);
+            if (prev && (b + side) % 2 === 0) push(prev.a, c, 0.1, 0.14); else if (prev) push(prev.c, a, 0.1, 0.14);
+            prev = { a, c };
+          }
+        }
+      }
+      scene.add(makeInstanced(list, new THREE.MeshStandardMaterial({ roughness: 0.92 }), 0.085, 0.36, 0.44));
+    }
+  }
+ 
+  // =====================================================================
+  //  스틸 트랙 + 강철 기둥
+  // =====================================================================
+  function buildSteel() {
+    const railMat = new THREE.MeshStandardMaterial({ color: col(0xd7263d), metalness: 0.55, roughness: 0.35 });
+    const spineMat = new THREE.MeshStandardMaterial({ color: col(0x3a3d45), metalness: 0.6, roughness: 0.5 });
+    const g = RAIL_GAUGE / 2;
+    trackGroup.add(sweep(octa(-g, 0, 0.16), railMat, 0.05));
+    trackGroup.add(sweep(octa(g, 0, 0.16), railMat, 0.05));
+    trackGroup.add(sweep(rect(0, -0.62, 0.55, 0.55), spineMat, 0.05));
+    // 크로스 타이 (레일↔스파인)
+    {
+      const list = [], step = Math.max(1, Math.round(1.4 / DS)), a = new THREE.Vector3(), b = new THREE.Vector3(), c = new THREE.Vector3();
+      for (let i = 0; i < SAMPLES; i += step) {
+        a.copy(P[i]).addScaledVector(RIGHT[i], -g - 0.1).addScaledVector(UP[i], -0.05);
+        b.copy(P[i]).addScaledVector(RIGHT[i], g + 0.1).addScaledVector(UP[i], -0.05);
+        list.push({ m: beamMatrix(a, b, 0.14, 0.12).clone() });
+        c.copy(P[i]).addScaledVector(UP[i], -0.62);
+        list.push({ m: beamMatrix(c, a, 0.12, 0.12).clone() });
+        list.push({ m: beamMatrix(c, b, 0.12, 0.12).clone() });
+      }
+      trackGroup.add(makeInstanced(list, new THREE.MeshStandardMaterial({ metalness: 0.6, roughness: 0.5 }), 0.6, 0.05, 0.28));
+    }
+    // 강철 기둥
+    {
+      const list = [];
+      const push = (a, b, t) => list.push({ m: beamMatrix(a, b, t, t).clone() });
+      const STEP = Math.max(1, Math.round(6 / DS)), hRight = new THREE.Vector3();
+      for (let i = 0; i < SAMPLES; i += STEP) {
+        const top = P[i].clone().addScaledVector(UP[i], -0.95);
+        const groundY = terrainHeight(P[i].x, P[i].z), h = top.y - groundY;
+        if (h < 1 || UP[i].y < 0.35 || trackBelow(i)) continue;
+        hRight.set(T[i].z, 0, -T[i].x).normalize();
+        if (h < 16 || UP[i].y < 0.75) {
+          const foot = new THREE.Vector3(top.x, groundY - 0.3, top.z);
+          push(foot, top, 0.55);
+          list.push({ m: new THREE.Matrix4().compose(new THREE.Vector3(top.x, groundY + 0.2, top.z), new THREE.Quaternion(), new THREE.Vector3(1.4, 0.4, 1.4)) });
+        } else {
+          const legs = [];
+          for (const side of [-1, 1]) {
+            const t2 = top.clone().addScaledVector(hRight, side * 1.1);
+            const foot = new THREE.Vector3(P[i].x + hRight.x * side * (1.1 + h * 0.04), groundY - 0.3, P[i].z + hRight.z * side * (1.1 + h * 0.04));
+            push(foot, t2, 0.5); legs.push({ t2, foot });
+            list.push({ m: new THREE.Matrix4().compose(new THREE.Vector3(foot.x, groundY + 0.2, foot.z), new THREE.Quaternion(), new THREE.Vector3(1.4, 0.4, 1.4)) });
+          }
+          push(top.clone().addScaledVector(hRight, -1.1), top.clone().addScaledVector(hRight, 1.1), 0.35);
+          let k = 0;
+          for (let y = groundY + 6; y < top.y - 3; y += 6, k++) {
+            const at = leg => leg.foot.clone().lerp(leg.t2, (y - leg.foot.y) / (leg.t2.y - leg.foot.y));
+            const L = at(legs[0]), R = at(legs[1]);
+            push(L, R, 0.28);
+            const yN = Math.min(y + 6, top.y - 0.5), at2 = leg => leg.foot.clone().lerp(leg.t2, (yN - leg.foot.y) / (leg.t2.y - leg.foot.y));
+            if (k % 2) push(L, at2(legs[1]), 0.2); else push(R, at2(legs[0]), 0.2);
+          }
+        }
+      }
+      scene.add(makeInstanced(list, new THREE.MeshStandardMaterial({ metalness: 0.3, roughness: 0.55 }), 0.6, 0.03, 0.82));
+    }
+  }
+  if (MAP.style === 'wood') buildWood(); else buildSteel();
+ 
+  // ---------- 루프 강철 지지대 ----------
+  for (const lp of LOOPS) {
+    const steel = new THREE.MeshStandardMaterial({ color: col(0xb8bcc4), metalness: 0.7, roughness: 0.4 });
+    const list = [];
+    const push = (a, b, t) => list.push({ m: beamMatrix(new THREE.Vector3(...a), new THREE.Vector3(...b), t, t).clone() });
+    const gy = x => terrainHeight(x[0], x[2]) - 0.5;
+    const cx = lp.top[0], topY = lp.top[1], zc = lp.zc;
+    for (const dz of [-9, 9]) {
+      const foot = [cx, 0, zc + dz]; foot[1] = gy(foot);
+      push(foot, [cx, topY - 1.8, zc + dz * 0.12], 0.7);
+      const foot2 = [cx + (dz < 0 ? -20 : 20), 0, zc + dz]; foot2[1] = gy(foot2);
+      push(foot2, [cx, topY - 1.8, zc + dz * 0.12], 0.55);
+    }
+    push([cx, topY - 1.8, zc - 1.1], [cx, topY - 1.8, zc + 1.1], 0.6);
+    for (const [side, z] of [[lp.right, zc - 1.5], [lp.left, zc + 1.5]]) {
+      const x = side[0] + (side === lp.right ? 1.6 : -1.6);
+      const foot = [x, 0, z]; foot[1] = gy(foot);
+      push(foot, [x, side[1] + 1.2, z], 0.6);
+      push([x, side[1] + 1.2, z], [side[0], side[1] + 1.4, z], 0.35);
+    }
+    for (let k = 0; k < lp.ring.length - 1; k++) {
+      const p0 = lp.ring[k], p1 = lp.ring[k + 1];
+      push([p0[0], p0[1], zc - 4], [p1[0], p1[1], zc - 4], 0.28);
+      push([p0[0], p0[1], zc + 4], [p1[0], p1[1], zc + 4], 0.28);
+      if (k % 2 === 0 && p0[1] > 6) push([p0[0], p0[1], zc - 4], [p0[0], p0[1], zc + 4], 0.2);
+    }
+    const mesh = new THREE.InstancedMesh(unitBox, steel, list.length);
+    list.forEach((it, i) => mesh.setMatrixAt(i, it.m));
+    mesh.castShadow = true; mesh.receiveShadow = true;
+    scene.add(mesh);
+  }
+ 
+  // ---------- 역(스테이션) ----------
+  {
+    const woodMat = new THREE.MeshStandardMaterial({ map: woodTex, roughness: 0.85 });
+    const platform = new THREE.Mesh(new THREE.BoxGeometry(70, 0.3, 4), new THREE.MeshStandardMaterial({ map: woodTexDark, roughness: 0.95 }));
+    platform.position.set(-10, 3.35, -3.2); platform.receiveShadow = true; platform.castShadow = true;
+    scene.add(platform);
+    const roofMat = new THREE.MeshStandardMaterial({ color: col(MAP.style === 'wood' ? 0x9a6a44 : 0x2f4a7a), roughness: 0.8 });
+    const roof = new THREE.Mesh(new THREE.BoxGeometry(72, 0.35, 12), roofMat); roof.position.set(-10, 8.6, -1.5); roof.castShadow = true; scene.add(roof);
+    const ridge = new THREE.Mesh(new THREE.BoxGeometry(72, 1.6, 6), roofMat); ridge.position.set(-10, 9.5, -1.5); ridge.castShadow = true; scene.add(ridge);
+    const pillarGeo = new THREE.BoxGeometry(0.4, 8.6, 0.4);
+    const pillarMat = MAP.style === 'wood' ? woodMat : new THREE.MeshStandardMaterial({ color: col(0xe4e6ea), roughness: 0.5 });
+    for (let x = -44; x <= 24; x += 8.5) for (const z of [-7, 4]) { const p = new THREE.Mesh(pillarGeo, pillarMat); p.position.set(x, 4.3, z); p.castShadow = true; scene.add(p); }
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(70, 3.2, 3.6), new THREE.MeshStandardMaterial({ color: col(0x6b5a48), roughness: 1 }));
+    deck.position.set(-10, 1.6, -3.2); scene.add(deck);
+  }
+ 
+  // ---------- 나무 ----------
+  {
+    const trunkGeo = new THREE.CylinderGeometry(0.28, 0.42, 3.2, 6); trunkGeo.translate(0, 1.6, 0);
+    const leafGeo = new THREE.ConeGeometry(2.4, 7, 8); leafGeo.translate(0, 6.2, 0);
+    const leafGeo2 = new THREE.SphereGeometry(2.6, 8, 6); leafGeo2.translate(0, 5.5, 0); leafGeo2.scale(1, 1.25, 1);
+    const trunkMat = new THREE.MeshStandardMaterial({ color: col(0x5d4028), roughness: 1 });
+    const leafMat = new THREE.MeshStandardMaterial({ color: col(0x2f6b34), roughness: 1 });
+    const leafMat2 = new THREE.MeshStandardMaterial({ color: col(0x4f8a3a), roughness: 1 });
+    const N = Q.trees;
+    const trunks = new THREE.InstancedMesh(trunkGeo, trunkMat, N), cones = new THREE.InstancedMesh(leafGeo, leafMat, N), rounds = new THREE.InstancedMesh(leafGeo2, leafMat2, N);
+    const m = new THREE.Matrix4(), q = new THREE.Quaternion(), sc = new THREE.Vector3(), leafCol = new THREE.Color();
+    let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    let placed = 0, nc = 0, nr = 0, tries = 0;
+    const CX = (LAYOUT.x0 + LAYOUT.x1) / 2, CZ = (LAYOUT.z0 + LAYOUT.z1) / 2;
+    while (placed < N && tries < 20000) {
+      tries++;
+      const x = CX - 900 + rnd() * 1800, z = CZ - 800 + rnd() * 1600;
+      if (x > -60 && x < 40 && z > -14 && z < 10) continue;
+      if (MAP.pond && (x - MAP.pond.x) ** 2 + (z - MAP.pond.z) ** 2 < (MAP.pond.r + 4) ** 2) continue;
+      let ok = true;
+      for (let i = 0; i < SAMPLES; i += 10) { const dx = P[i].x - x, dz = P[i].z - z; if (dx * dx + dz * dz < 8.5 * 8.5) { ok = false; break; } }
+      if (!ok) continue;
+      const y = terrainHeight(x, z), s = 0.75 + rnd() * 1.1;
+      sc.set(s, s * (0.9 + rnd() * 0.4), s);
+      q.setFromAxisAngle(worldUp, rnd() * Math.PI * 2);
+      m.compose(new THREE.Vector3(x, y - 0.1, z), q, sc);
+      trunks.setMatrixAt(placed, m);
+      leafCol.setHSL(0.3 + rnd() * 0.06, 0.35 + rnd() * 0.2, 0.22 + rnd() * 0.12).convertSRGBToLinear();
+      if (rnd() < 0.6) { cones.setMatrixAt(nc, m); cones.setColorAt(nc, leafCol); nc++; } else { rounds.setMatrixAt(nr, m); rounds.setColorAt(nr, leafCol); nr++; }
+      placed++;
+    }
+    trunks.count = placed; cones.count = nc; rounds.count = nr;
+    for (const mm of [trunks, cones, rounds]) { mm.castShadow = true; mm.receiveShadow = true; scene.add(mm); }
+  }
+ 
+  // ---------- 구름 ----------
+  {
+    const c = document.createElement('canvas'); c.width = 256; c.height = 128;
+    const gctx = c.getContext('2d');
+    let seed = 21; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 18; i++) {
+      const x = 40 + rnd() * 176, y = 40 + rnd() * 50, r = 22 + rnd() * 30;
+      const grd = gctx.createRadialGradient(x, y, 0, x, y, r);
+      grd.addColorStop(0, 'rgba(255,255,255,0.85)'); grd.addColorStop(1, 'rgba(255,255,255,0)');
+      gctx.fillStyle = grd; gctx.fillRect(0, 0, 256, 128);
+    }
+    const mat = new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(c), transparent: true, depthWrite: false, fog: false, opacity: 0.9 });
+    const geo = new THREE.PlaneGeometry(1, 0.5);
+    for (let i = 0; i < 26; i++) {
+      const cl = new THREE.Mesh(geo, mat), s = 220 + rnd() * 260;
+      cl.scale.set(s, s, 1);
+      cl.position.set(200 + (rnd() - 0.5) * 2400, 260 + rnd() * 160, 60 + (rnd() - 0.5) * 2400);
+      cl.rotation.x = -Math.PI / 2 + 0.35 + rnd() * 0.2; cl.rotation.z = rnd() * Math.PI;
+      scene.add(cl);
+    }
+  }
+ 
+  // ---------- 열차 ----------
+  const cars = [];
+  {
+    const wood = MAP.style === 'wood';
+    const bodyMat = new THREE.MeshStandardMaterial({ color: col(wood ? 0xf1ebe0 : 0x1e3f8f), metalness: 0.3, roughness: 0.4 });
+    const stripeMat = new THREE.MeshStandardMaterial({ color: col(wood ? 0xc8102e : 0xffc233), metalness: 0.3, roughness: 0.4 });
+    const seatMat = new THREE.MeshStandardMaterial({ color: col(wood ? 0x33405e : 0x3e4252), roughness: 0.8 });
+    const barMat = new THREE.MeshStandardMaterial({ color: col(0x2a2a2a), metalness: 0.6, roughness: 0.4 });
+    const wheelMat = new THREE.MeshStandardMaterial({ color: col(0x333333), roughness: 0.6 });
+    const wheelGeo = new THREE.CylinderGeometry(0.2, 0.2, 0.12, 12); wheelGeo.rotateZ(Math.PI / 2);
+    function makeCar(isFront) {
+      const car = new THREE.Group();
+      const shell = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.42, 2.9), bodyMat); shell.position.set(0, 0.38, 0); car.add(shell);
+      const floor = new THREE.Mesh(new THREE.BoxGeometry(1.6, 0.08, 2.8), seatMat); floor.position.set(0, 0.6, 0); car.add(floor);
+      const stripe = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.1, 2.92), stripeMat); stripe.position.set(0, 0.5, 0); car.add(stripe);
+      for (const side of [-1, 1]) { const wall = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.5, 2.9), bodyMat); wall.position.set(side * 0.81, 0.84, 0); car.add(wall); }
+      const back = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.5, 0.08), bodyMat); back.position.set(0, 0.84, 1.41); car.add(back);
+      if (isFront) {
+        const nose = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.55, 0.9), bodyMat); nose.position.set(0, 0.7, -1.7); car.add(nose);
+        const noseStripe = new THREE.Mesh(new THREE.BoxGeometry(1.72, 0.12, 0.92), stripeMat); noseStripe.position.set(0, 0.62, -1.7); car.add(noseStripe);
+      } else {
+        const front = new THREE.Mesh(new THREE.BoxGeometry(1.7, 0.5, 0.08), bodyMat); front.position.set(0, 0.84, -1.41); car.add(front);
+      }
+      for (const row of [-0.7, 0.75]) for (const side of [-SEAT_OFFSET, SEAT_OFFSET]) {
+        const cushion = new THREE.Mesh(new THREE.BoxGeometry(0.62, 0.14, 0.6), seatMat); cushion.position.set(side, 0.7, row); car.add(cushion);
+        const backrest = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.5, 0.12), seatMat); backrest.position.set(side, 1.0, row + 0.34); car.add(backrest);
+        const headrest = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.16, 0.12), seatMat); headrest.position.set(side, 1.32, row + 0.34); car.add(headrest);
+        const lap = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.6, 8), barMat); lap.rotation.z = Math.PI / 2; lap.position.set(side, 1.0, row - 0.3); car.add(lap);
+        for (const s2 of [-0.27, 0.27]) { const post = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.42, 6), barMat); post.position.set(side + s2, 0.82, row - 0.3); car.add(post); }
+      }
+      for (const wz of [-1.1, 1.1]) for (const wx of [-0.7, 0.7]) { const w = new THREE.Mesh(wheelGeo, wheelMat); w.position.set(wx, 0.05, wz); car.add(w); }
+      car.matrixAutoUpdate = false;
+      car.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      return car;
+    }
+    for (let i = 0; i < CAR_COUNT; i++) { const c = makeCar(i === 0); scene.add(c); cars.push(c); }
+  }
+ 
+  // =====================================================================
+  //  상태 / 입력 / UI
+  // =====================================================================
+  const state = { s: 0, v: 0, running: false, lap: 1, chase: false, yaw: 0, pitch: 0, muted: false, freeCam: false, frontSeat: false };
+  const overlay = document.getElementById('overlay');
+  const elSpeed = document.getElementById('speed'), elHeight = document.getElementById('height'), elG = document.getElementById('gforce'), elLap = document.getElementById('lap');
+  const startBtn = document.getElementById('startBtn');
+ 
+  // 맵 선택 카드
+  {
+    const wrap = document.getElementById('maps');
+    for (const id of Object.keys(MAPS)) {
+      const m = MAPS[id], el = document.createElement('div');
+      el.className = 'map' + (id === mapId ? ' active' : '');
+      const stats = id === mapId ? `길이 ${Math.round(TRACK_LENGTH)} m · 최고 ${Math.round(MAX_Y)} m · ${Math.round(MAX_V * 3.6)} km/h · 약 ${Math.round(LAP_TIME)}초` : '클릭하면 이 맵으로 바뀝니다';
+      el.innerHTML = `<div class="tag">${m.tag}</div><div class="name">🎢 ${m.name}</div><div class="desc">${m.desc}</div><div class="stats">${stats}</div>`;
+      el.addEventListener('click', e => { e.stopPropagation(); if (id !== mapId) location.search = '?map=' + id; });
+      wrap.appendChild(el);
+    }
+  }
+ 
+  // 터치 버튼
+  const touchBar = document.getElementById('touch');
+  const tb = {}; touchBar.querySelectorAll('button').forEach(b => tb[b.dataset.act] = b);
+  function refreshTouch() {
+    tb.pause.innerHTML = state.running ? '<span>⏸</span>정지' : (state.s > 1 ? '<span>▶</span>계속' : '<span>▶</span>출발');
+    tb.seat.innerHTML = state.frontSeat ? '<span>🪑</span>앞줄' : '<span>🪑</span>둘째칸';
+    tb.chase.innerHTML = state.chase ? '<span>🎥</span>탑승' : '<span>🎥</span>외부';
+    tb.mute.innerHTML = state.muted ? '<span>🔇</span>소리' : '<span>🔊</span>소리';
+    tb.map.innerHTML = '<span>🗺</span>' + (mapId === 'texpress' ? 'Steel' : 'T-Exp');
+  }
+  if (IS_TOUCH) {
+    touchBar.classList.remove('hidden');
+    const hint = document.getElementById('keysHint');
+    if (hint) hint.innerHTML = '화면을 탭하면 출발 · 드래그로 주위 둘러보기 · 오른쪽 아래 버튼으로 시점 / 소리 / 맵 전환';
+  }
+  const act = {
+    pause: () => setRunning(!state.running),
+    seat: () => { state.frontSeat = !state.frontSeat; },
+    chase: () => { state.chase = !state.chase; },
+    mute: () => { state.muted = !state.muted; },
+    map: () => { location.search = '?map=' + (mapId === 'texpress' ? 'steel' : 'texpress'); },
+    reset: () => { reset(); },
+  };
+  touchBar.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', e => { e.stopPropagation(); e.preventDefault(); act[b.dataset.act](); refreshTouch(); });
+    b.addEventListener('touchstart', e => e.stopPropagation(), { passive: true });
   });
-});
  
-/* ============================= Spotlight (search) ============================= */
-const spotlightOverlay = document.getElementById('spotlightOverlay');
-function openSpotlight(){
-  if(!currentPage()) return;
-  spotlightOverlay.classList.add('open');
-  document.getElementById('spotlightInput').value = '';
-  clearSpotlightSearch();
-  setTimeout(() => document.getElementById('spotlightInput').focus(), 30);
-}
-function closeSpotlight(){ spotlightOverlay.classList.remove('open'); }
-document.getElementById('spotlightBtn').addEventListener('click', openSpotlight);
-document.getElementById('spotlightCloseBtn').addEventListener('click', closeSpotlight);
-spotlightOverlay.addEventListener('click', (e) => { if(e.target === spotlightOverlay) closeSpotlight(); });
-document.addEventListener('keydown', (e) => {
-  const mod = e.ctrlKey || e.metaKey;
-  if(mod && e.key.toLowerCase() === 'k'){ e.preventDefault(); if(spotlightOverlay.classList.contains('open')) closeSpotlight(); else openSpotlight(); }
-  else if(e.key === 'Escape'){ closeSpotlight(); closeModal(); }
-  const tag = (e.target.tagName || '').toLowerCase();
-  if(tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
-  if(mod && e.key.toLowerCase() === 'z' && !e.shiftKey){ e.preventDefault(); undo(); }
-  else if(mod && ((e.key.toLowerCase() === 'z' && e.shiftKey) || e.key.toLowerCase() === 'y')){ e.preventDefault(); redo(); }
-  else if(e.key === '1') setActiveTool('pen');
-  else if(e.key === '2') setActiveTool('paintbrush');
-  else if(e.key === '3') setActiveTool('highlighter');
-  else if(e.key === '4') setActiveTool('eraser');
-  else if(e.key === '5') setActiveTool('text');
-});
+  function setRunning(run) {
+    state.running = run;
+    overlay.classList.toggle('hidden', run);
+    startBtn.textContent = state.s > 1 ? '계속하기' : '출발하기';
+    if (run) audio.start();
+    refreshTouch();
+  }
+  function reset() { state.s = 0; state.v = 0; state.lap = 1; state.yaw = 0; state.pitch = 0; }
+  refreshTouch();
  
-function clearSpotlightSearch(){
-  document.getElementById('spSearchResultsWrap').style.display = 'none';
-  document.getElementById('spSearchResults').innerHTML = '';
-  document.getElementById('spSearchHint').style.display = 'block';
-}
-function renderSearchHits(items){
-  document.getElementById('spSearchHint').style.display = 'none';
-  const box = document.getElementById('spSearchResults');
-  document.getElementById('spSearchResultsWrap').style.display = 'block';
-  box.innerHTML = '';
-  if(!items.length){ const e = document.createElement('div'); e.className = 'spotlight-result empty'; e.textContent = 'No matches found.'; box.appendChild(e); return; }
-  items.forEach(it => {
-    const row = document.createElement('div'); row.className = 'search-hit';
-    row.innerHTML = `<div class="sh-title"></div>`;
-    row.querySelector('.sh-title').textContent = it.label;
-    row.addEventListener('click', () => { closeSpotlight(); openEditor(it.noteId, it.pageId); });
-    box.appendChild(row);
+  startBtn.addEventListener('click', e => { e.stopPropagation(); setRunning(true); });
+  overlay.addEventListener('click', e => { if (e.target === overlay || e.target.tagName === 'H1' || e.target.tagName === 'P') setRunning(true); });
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); setRunning(!state.running); }
+    else if (e.code === 'KeyC') { state.chase = !state.chase; refreshTouch(); }
+    else if (e.code === 'KeyR') reset();
+    else if (e.code === 'KeyM') { state.muted = !state.muted; refreshTouch(); }
+    else if (e.code === 'KeyV') { state.frontSeat = !state.frontSeat; refreshTouch(); }
+    else if (e.code === 'Digit1' && mapId !== 'texpress') location.search = '?map=texpress';
+    else if (e.code === 'Digit2' && mapId !== 'steel') location.search = '?map=steel';
   });
-}
-function allPagesFlat(){
-  const list = [];
-  state.notes.forEach(n => n.pages.forEach((p, i) => list.push({ note: n, page: p, index: i })));
-  return list;
-}
-document.getElementById('spotlightInput').addEventListener('input', (e) => {
-  const q = e.target.value.trim().toLowerCase();
-  if(!q){ clearSpotlightSearch(); return; }
-  const matches = allPagesFlat().filter(it => (it.note.name || '').toLowerCase().includes(q));
-  renderSearchHits(matches.map(it => ({ noteId: it.note.id, pageId: it.page.id, label: it.note.name + (it.note.pages.length > 1 ? ' — page ' + (it.index+1) : '') })));
-});
+  let dragging = false, lastX = 0, lastY = 0;
+  const onDown = (x, y) => { dragging = true; lastX = x; lastY = y; };
+  const onMove = (x, y) => {
+    if (!dragging) return;
+    state.yaw -= (x - lastX) * 0.005; state.pitch -= (y - lastY) * 0.005;
+    state.pitch = Math.max(-1.2, Math.min(1.2, state.pitch));
+    lastX = x; lastY = y;
+  };
+  const el = renderer.domElement;
+  el.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
+  window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+  window.addEventListener('mouseup', () => dragging = false);
+  el.addEventListener('touchstart', e => { if (e.touches.length === 1) { const t = e.touches[0]; onDown(t.clientX, t.clientY); } else dragging = false; }, { passive: true });
+  el.addEventListener('touchmove', e => { if (e.touches.length === 1) { const t = e.touches[0]; onMove(t.clientX, t.clientY); } }, { passive: true });
+  el.addEventListener('touchend', () => dragging = false);
+  el.addEventListener('touchcancel', () => dragging = false);
+  function onResize() {
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.fov = camera.aspect < 1 ? 96 : 80;   // 세로 화면(폰)에서는 시야각을 넓혀 터널 시야 방지
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', () => setTimeout(onResize, 300));
+  if (window.visualViewport) window.visualViewport.addEventListener('resize', onResize);
  
-/* ============================= Init ============================= */
-async function init(){
-  await loadState();
-  showView('home');
-  renderHome();
-  renderStyleRow();
-}
-init();
+  // ---------- 사운드 ----------
+  const audio = (() => {
+    let ctx, wind, rattle, chainGain, started = false, chainTimer = 0;
+    function start() {
+      if (started) { if (ctx && ctx.state === 'suspended') ctx.resume(); return; }
+      started = true;
+      try {
+        ctx = new (window.AudioContext || window.webkitAudioContext)();
+        if (ctx.state === 'suspended') ctx.resume();
+        const len = ctx.sampleRate * 2, buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        const mk = (type, freq, q) => {
+          const src = ctx.createBufferSource(); src.buffer = buf; src.loop = true;
+          const f = ctx.createBiquadFilter(); f.type = type; f.frequency.value = freq; f.Q.value = q;
+          const gn = ctx.createGain(); gn.gain.value = 0;
+          src.connect(f).connect(gn).connect(ctx.destination); src.start();
+          return { f, gn };
+        };
+        wind = mk('lowpass', 500, 0.7);
+        rattle = mk('bandpass', MAP.style === 'wood' ? 140 : 320, 1.2);
+        chainGain = ctx.createGain(); chainGain.gain.value = 0.25; chainGain.connect(ctx.destination);
+      } catch (e) { started = false; }
+    }
+    function click(freq) {
+      const o = ctx.createOscillator(), gn = ctx.createGain();
+      o.type = 'square'; o.frequency.value = freq;
+      gn.gain.setValueAtTime(0.5, ctx.currentTime); gn.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.05);
+      o.connect(gn).connect(chainGain); o.start(); o.stop(ctx.currentTime + 0.06);
+    }
+    function update(dt, v, onLift, running) {
+      if (!ctx) return;
+      const mute = state.muted || !running, vn = Math.min(v / 32, 1.3);
+      wind.gn.gain.value = mute ? 0 : Math.min(0.55, vn * vn * 0.5);
+      wind.f.frequency.value = 350 + v * 40;
+      rattle.gn.gain.value = mute ? 0 : Math.min(0.5, vn * (MAP.style === 'wood' ? 0.32 : 0.14)) * (0.6 + Math.random() * 0.8);
+      rattle.f.frequency.value = (MAP.style === 'wood' ? 110 : 280) + v * 3 + Math.random() * 40;
+      if (onLift && !mute) { chainTimer += dt; if (chainTimer > 0.19) { chainTimer = 0; click(85 + Math.random() * 30); } }
+    }
+    return { start, update };
+  })();
  
-/* Register the service worker for offline/installable use. Service workers
-   only work over https:// (or localhost), so this quietly does nothing when
-   the file is opened directly from disk — the app still runs, just without
-   offline caching. */
-if('serviceWorker' in navigator && location.protocol.startsWith('http')){
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js')
-      .catch(err => console.warn('Service worker registration failed:', err));
-  });
-}
+  function physics(dt) { stepPhysics(state, dt); }
  
+  // ---------- 카메라 / 열차 배치 ----------
+  const camFrame = newFrame(), carFrame = newFrame();
+  const basis = new THREE.Matrix4(), targetQ = new THREE.Quaternion(), qYaw = new THREE.Quaternion(), qPitch = new THREE.Quaternion();
+  const targetPos = new THREE.Vector3(), tmp = new THREE.Vector3(), shake = new THREE.Vector3();
+  const AX_Y = new THREE.Vector3(0, 1, 0), AX_X = new THREE.Vector3(1, 0, 0);
+  let first = true, tShake = 0;
+  const SHAKE_AMP = MAP.style === 'wood' ? 0.03 : 0.012;
+ 
+  function placeCars() {
+    for (let i = 0; i < CAR_COUNT; i++) {
+      getFrame(state.s - i * CAR_SPACING, carFrame);
+      basis.makeBasis(carFrame.right, carFrame.up, tmp.copy(carFrame.tan).negate());
+      cars[i].matrix.copy(basis).setPosition(carFrame.pos.clone().addScaledVector(carFrame.up, 0.02));
+    }
+  }
+  function updateCamera(dt) {
+    if (state.freeCam) return;
+    placeCars();
+    tShake += dt;
+    const camS = state.s - (state.frontSeat ? 0 : CAMERA_CAR) * CAR_SPACING - 0.7;
+    getFrame(camS, camFrame);
+    if (!state.chase) {
+      const amp = Math.pow(Math.min(state.v / 30, 1.4), 2) * SHAKE_AMP * (state.running ? 1 : 0);
+      shake.set(
+        Math.sin(tShake * 47.1) * 0.6 + Math.sin(tShake * 23.7 + 1) * 0.4 + (Math.random() - 0.5) * 0.7,
+        Math.sin(tShake * 61.3 + 2) * 0.5 + Math.sin(tShake * 17.9) * 0.5 + (Math.random() - 0.5) * 0.9, 0
+      ).multiplyScalar(amp);
+      targetPos.copy(camFrame.pos).addScaledVector(camFrame.up, HEAD_HEIGHT + shake.y).addScaledVector(camFrame.right, SEAT_OFFSET + shake.x);
+      basis.makeBasis(camFrame.right, camFrame.up, tmp.copy(camFrame.tan).negate());
+      targetQ.setFromRotationMatrix(basis);
+      qYaw.setFromAxisAngle(AX_Y, state.yaw + shake.x * 0.4);
+      qPitch.setFromAxisAngle(AX_X, state.pitch + shake.y * 0.4);
+    } else {
+      getFrame(state.s - CAR_COUNT * CAR_SPACING - 9, camFrame);
+      targetPos.copy(camFrame.pos).addScaledVector(camFrame.up, 4.5).addScaledVector(camFrame.tan, -2);
+      getFrame(state.s - 2 * CAR_SPACING, carFrame);
+      const look = carFrame.pos.clone().addScaledVector(carFrame.up, 1);
+      const dir = look.sub(targetPos).normalize();
+      const up = worldUp.clone().addScaledVector(dir, -worldUp.dot(dir)).normalize();
+      const right = new THREE.Vector3().crossVectors(dir, up).normalize();
+      basis.makeBasis(right, up, dir.clone().negate());
+      targetQ.setFromRotationMatrix(basis);
+      qYaw.setFromAxisAngle(AX_Y, state.yaw); qPitch.setFromAxisAngle(AX_X, state.pitch);
+    }
+    targetQ.multiply(qYaw).multiply(qPitch);
+    if (first) { camera.position.copy(targetPos); camera.quaternion.copy(targetQ); first = false; return; }
+    const k = 1 - Math.exp(-dt * (state.chase ? 5 : 16));
+    camera.position.lerp(targetPos, state.chase ? k : 1);
+    camera.quaternion.slerp(targetQ, k);
+  }
+ 
+  // ---------- HUD ----------
+  let hudTimer = 0;
+  function updateHUD(dt) {
+    hudTimer += dt; if (hudTimer < 0.1) return; hudTimer = 0;
+    const f = getFrame(state.s - CAMERA_CAR * CAR_SPACING);
+    const accel = new THREE.Vector3(0, G, 0).addScaledVector(f.kappa, state.v * state.v);
+    elSpeed.textContent = Math.round(state.v * 3.6);
+    elHeight.textContent = Math.round(f.pos.y);
+    elG.textContent = (accel.dot(f.up) / G).toFixed(1);
+    elLap.textContent = state.lap;
+  }
+ 
+  // ---------- 메인 루프 ----------
+  let last = performance.now();
+  function animate(now) {
+    requestAnimationFrame(animate);
+    const dt = Math.min((now - last) / 1000, 0.05); last = now;
+    if (state.running) for (let i = 0; i < 4; i++) physics(dt / 4);
+    updateCamera(dt);
+    updateHUD(dt);
+    audio.update(dt, state.v, state.s < LIFT_END_S + 2 && state.s > 30, state.running);
+    renderer.render(scene, camera);
+  }
+ 
+  document.getElementById('loading').classList.add('hidden');
+  overlay.classList.remove('hidden');
+  onResize();
+  updateCamera(0);
+  requestAnimationFrame(animate);
+ 
+  // 디버그용
+  window.coaster = {
+    state, mapId, trackLength: TRACK_LENGTH, liftEnd: LIFT_END_S, maxY: MAX_Y, maxV: MAX_V, lapTime: LAP_TIME,
+    jumpTo(s, v) { state.s = s; if (v != null) state.v = v; first = true; updateCamera(0); },
+    topView(on) { state.freeCam = !!on; if (on) { const cx = (LAYOUT.x0 + LAYOUT.x1) / 2, cz = (LAYOUT.z0 + LAYOUT.z1) / 2; camera.position.set(cx, 560, cz); camera.up.set(0, 0, -1); camera.lookAt(cx, 0, cz); camera.up.set(0, 1, 0); } else first = true; },
+    step(dt) { physics(dt); },
+    frameAt(s) { const f = getFrame(s, newFrame()); return { x: f.pos.x, y: f.pos.y, z: f.pos.z, upY: f.up.y, kappa: f.kappa.length() }; },
+    gAt(s, v) { const f = getFrame(s, newFrame()); return new THREE.Vector3(0, G, 0).addScaledVector(f.kappa, v * v).dot(f.up) / G; },
+    freeLook(px, py, pz, tx, ty, tz) { state.freeCam = true; camera.position.set(px, py, pz); camera.up.set(0, 1, 0); camera.lookAt(tx, ty, tz); renderer.render(scene, camera); },
+    render() { updateCamera(0); renderer.render(scene, camera); }
+  };
 })();
 </script>
 </body>
