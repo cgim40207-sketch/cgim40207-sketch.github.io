@@ -307,119 +307,10 @@
     .note-name-input{ font-size:12px; }
     #pageIndicator{ min-width:56px; font-size:11px; }
   }
-
-  /* ============================= Auth screen ============================= */
-  #authView{
-    position:fixed; inset:0; z-index:400; display:none;
-    align-items:center; justify-content:center; padding:24px;
-    background:var(--bg);
-  }
-  #authView.show{ display:flex; }
-  .auth-card{
-    width:100%; max-width:380px; background:var(--paper);
-    border-radius:var(--radius-lg); box-shadow:var(--shadow);
-    padding:32px 28px 26px; text-align:center;
-  }
-  .auth-card .logo-badge{ margin:0 auto 14px; }
-  .auth-title{
-    font-family:var(--font-display); font-size:25px; font-weight:700;
-    margin:0 0 6px; letter-spacing:-0.4px;
-  }
-  .auth-sub{ color:var(--ink-soft); font-size:13.5px; margin:0 0 22px; line-height:1.5; }
-  .auth-field{ text-align:left; margin-bottom:13px; }
-  .auth-field label{
-    display:block; font-size:12px; font-weight:600; color:var(--ink-soft);
-    margin-bottom:5px; letter-spacing:0.2px;
-  }
-  .auth-field input{
-    width:100%; padding:11px 13px; font-size:15px; color:var(--ink);
-    background:var(--bg); border:1.5px solid transparent;
-    border-radius:12px; outline:none; transition:border-color .15s, background .15s;
-  }
-  .auth-field input:focus{ border-color:var(--blue); background:var(--paper); }
-  .auth-field input[name="invite"]{ text-transform:uppercase; letter-spacing:1.5px; }
-  .auth-submit{
-    width:100%; margin-top:8px; padding:12px; border:none; border-radius:12px;
-    background:var(--blue); color:#fff; font-size:15px; font-weight:600;
-    cursor:pointer; transition:background .15s;
-  }
-  .auth-submit:hover:not(:disabled){ background:var(--blue-deep); }
-  .auth-submit:disabled{ opacity:.55; cursor:default; }
-  .auth-error{
-    display:none; margin:14px 0 0; padding:10px 12px; border-radius:11px;
-    background:var(--danger-soft); color:var(--danger);
-    font-size:13px; line-height:1.45; text-align:left;
-  }
-  .auth-error.show{ display:block; }
-  .auth-switch{
-    margin:18px 0 0; font-size:13px; color:var(--ink-soft);
-  }
-  .auth-switch button{
-    background:none; border:none; padding:0; font-size:13px; font-weight:600;
-    color:var(--blue); cursor:pointer; text-decoration:underline;
-  }
-  .auth-offline{
-    margin:16px 0 0; padding-top:15px; border-top:1px solid var(--line-soft);
-    font-size:12.5px; color:var(--ink-faint); line-height:1.5;
-  }
-  .auth-offline button{
-    background:none; border:none; padding:0; font-size:12.5px; font-weight:600;
-    color:var(--ink-soft); cursor:pointer; text-decoration:underline;
-  }
-  /* account chip in the home topbar */
-  #accountBtn{
-    width:34px; height:34px; border-radius:50%; border:none; cursor:pointer;
-    background:var(--blue-soft); color:var(--blue-deep);
-    font-size:13px; font-weight:700; font-family:var(--font-display);
-    display:flex; align-items:center; justify-content:center; margin-left:10px;
-    text-transform:uppercase; flex:none;
-  }
-  #accountBtn:hover{ background:var(--blue); color:#fff; }
-  #accountBtn.offline{ background:var(--line-soft); color:var(--ink-faint); }
-
 </style>
 </head>
 <body>
 <div id="app">
-
-  <!-- ============================= AUTH VIEW ============================= -->
-  <div id="authView">
-    <div class="auth-card">
-      <div class="logo-badge" id="authLogoBadge"></div>
-      <h1 class="auth-title">Fly Notes</h1>
-      <p class="auth-sub" id="authSub">Sign in to sync your notes across devices.</p>
-
-      <div class="auth-field">
-        <label for="authUser">Username</label>
-        <input id="authUser" name="username" type="text" autocomplete="username"
-               autocapitalize="none" autocorrect="off" spellcheck="false">
-      </div>
-
-      <div class="auth-field">
-        <label for="authPass">Password</label>
-        <input id="authPass" name="password" type="password" autocomplete="current-password">
-      </div>
-
-      <div class="auth-field" id="authInviteField" style="display:none">
-        <label for="authInvite">Invite code</label>
-        <input id="authInvite" name="invite" type="text" placeholder="ABCD-1234"
-               autocapitalize="characters" autocorrect="off" spellcheck="false">
-      </div>
-
-      <button class="auth-submit" id="authSubmit">Sign in</button>
-      <p class="auth-error" id="authError"></p>
-
-      <p class="auth-switch" id="authSwitch">
-        Have an invite code? <button id="authToggle">Create an account</button>
-      </p>
-
-      <p class="auth-offline">
-        Your notes are saved on this device either way.
-        <button id="authSkip">Use without signing in</button>
-      </p>
-    </div>
-  </div>
-
 
   <!-- ============================= HOME VIEW ============================= -->
   <div id="homeView">
@@ -433,7 +324,6 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         New
       </button>
-      <button id="accountBtn" title="Account" style="display:none"></button>
     </div>
     <div id="homeBody">
       <div class="section-label">Saved notes</div>
@@ -590,7 +480,6 @@ const BIRD_SVG = `<svg viewBox="0 0 322 213" xmlns="http://www.w3.org/2000/svg">
   <path d="M143 5 C130.2 13.3 84.3 44 66 55 C47.7 66 41.2 65.7 33 71 C24.8 76.3 20.7 81.8 17 87 C13.3 92.2 11.5 96.3 11 102 C10.5 107.7 11 114.8 14 121 C17 127.2 21.3 133.2 29 139 C36.7 144.8 42.7 143.8 60 156 C77.3 168.2 107.2 211.8 133 212 C158.8 212.2 197.3 168 215 157 C232.7 146 232 150.3 239 146 C246 141.7 254 133.5 257 131 L313 115 C263.3 91 265.7 86 245 71 C224.3 56 160 16 143 5 Z" fill="#1FA9E0"/>
   <circle cx="223.5" cy="84.5" r="5.5" fill="#15171C"/>
 </svg>`;
-document.getElementById('authLogoBadge').innerHTML = BIRD_SVG;
 document.getElementById('homeLogoBadge').innerHTML = BIRD_SVG;
 document.getElementById('emptyLogoBadge').innerHTML = BIRD_SVG;
 document.getElementById('editorLogoBadge').innerHTML = BIRD_SVG;
@@ -688,7 +577,10 @@ async function storageGet(key){
     try{
       const res = await window.storage.get(key, false);
       if(res && typeof res.value === 'string') return res.value;
-    }catch(e){ console.warn('window.storage.get failed, trying localStorage', e); }
+    }catch(e){
+      // "Key not found" just means nothing has been saved yet (first run). Not an error.
+      if(!/not found/i.test(String(e && e.message || e))) console.warn('window.storage.get failed, trying localStorage', e);
+    }
   }
   try{ const v = localStorage.getItem(LOCAL_KEY_PREFIX + key); if(v !== null) return v; }catch(e){ console.warn('localStorage.getItem failed', e); }
   return null;
@@ -1653,177 +1545,12 @@ document.getElementById('spotlightInput').addEventListener('input', (e) => {
   renderSearchHits(matches.map(it => ({ noteId: it.note.id, pageId: it.page.id, label: it.note.name + (it.note.pages.length > 1 ? ' — page ' + (it.index+1) : '') })));
 });
 
-
-/* ============================= Accounts ============================= */
-/* The session lives in an HttpOnly cookie set by the server. JavaScript
-   cannot read it, which is the point -- a stolen script can't exfiltrate it.
-   We only ever ask the server "am I signed in?" and act on the answer.
-
-   SERVER_URL empty means "same origin", which is the case when the server
-   serves index.html itself. Point it at your domain only if you host the
-   HTML somewhere else. */
-const SERVER_URL = '';
-
-let account = null;          // { username, displayName } when signed in
-let authMode = 'signin';     // or 'register'
-let serverReachable = false;
-
-function api(path, opts){
-  return fetch(SERVER_URL + path, Object.assign({
-    credentials: 'include',           // send/receive the session cookie
-    headers: { 'Content-Type': 'application/json' },
-  }, opts || {}));
-}
-
-const AUTH_MESSAGES = {
-  bad_credentials:   'That username and password don\'t match.',
-  bad_invite:        'That invite code isn\'t valid, or has already been used.',
-  username_taken:    'That username is already taken.',
-  bad_username:      'Usernames can be 3-32 letters, numbers, dots, dashes or underscores.',
-  password_too_short:'Passwords need to be at least 8 characters.',
-  too_many_attempts: 'Too many attempts. Please wait a few minutes and try again.',
-};
-
-function authError(msg){
-  const el = document.getElementById('authError');
-  el.textContent = msg;
-  el.classList.toggle('show', !!msg);
-}
-
-function setAuthMode(mode){
-  authMode = mode;
-  const reg = mode === 'register';
-  document.getElementById('authInviteField').style.display = reg ? '' : 'none';
-  document.getElementById('authSubmit').textContent = reg ? 'Create account' : 'Sign in';
-  document.getElementById('authSub').textContent = reg
-    ? 'Enter the invite code you were given.'
-    : 'Sign in to sync your notes across devices.';
-  document.getElementById('authSwitch').innerHTML = reg
-    ? 'Already have an account? <button id="authToggle">Sign in</button>'
-    : 'Have an invite code? <button id="authToggle">Create an account</button>';
-  document.getElementById('authToggle').onclick = () =>
-    setAuthMode(reg ? 'signin' : 'register');
-  document.getElementById('authPass').setAttribute(
-    'autocomplete', reg ? 'new-password' : 'current-password');
-  authError('');
-}
-
-function showAuth(show){
-  document.getElementById('authView').classList.toggle('show', show);
-  if(show) setTimeout(() => document.getElementById('authUser').focus(), 50);
-}
-
-function renderAccountBtn(){
-  const btn = document.getElementById('accountBtn');
-  btn.style.display = '';
-  if(account){
-    btn.textContent = (account.displayName || account.username).trim().charAt(0) || '?';
-    btn.classList.remove('offline');
-    btn.title = 'Signed in as ' + account.username;
-  } else {
-    btn.textContent = '\u2022';           // a dot, not a letter
-    btn.classList.add('offline');
-    btn.title = 'Not signed in — notes stay on this device';
-  }
-}
-
-async function submitAuth(){
-  const btn  = document.getElementById('authSubmit');
-  const user = document.getElementById('authUser').value.trim();
-  const pass = document.getElementById('authPass').value;
-  const inv  = document.getElementById('authInvite').value.trim().toUpperCase();
-
-  if(!user || !pass){ authError('Please fill in both fields.'); return; }
-  if(authMode === 'register' && !inv){ authError('An invite code is required.'); return; }
-
-  btn.disabled = true;
-  btn.textContent = authMode === 'register' ? 'Creating…' : 'Signing in…';
-  authError('');
-
-  try{
-    const body = authMode === 'register'
-      ? { username: user, password: pass, invite: inv }
-      : { username: user, password: pass };
-    const res = await api(authMode === 'register' ? '/api/register' : '/api/login',
-                          { method:'POST', body: JSON.stringify(body) });
-    const data = await res.json().catch(() => ({}));
-
-    if(res.ok){
-      account = data;
-      serverReachable = true;
-      showAuth(false);
-      renderAccountBtn();
-      showToast('Signed in as ' + account.username, 'success');
-      document.getElementById('authPass').value = '';
-    } else {
-      authError(AUTH_MESSAGES[data.error] || 'Something went wrong. Please try again.');
-    }
-  }catch(e){
-    // Network failure, not a rejected password. Say so plainly.
-    authError('Can\'t reach the server. Check your connection, or use the app without signing in.');
-  }finally{
-    btn.disabled = false;
-    setAuthMode(authMode);
-  }
-}
-
-async function signOut(){
-  try{ await api('/api/logout', { method:'POST' }); }catch(e){ /* sign out locally anyway */ }
-  account = null;
-  renderAccountBtn();
-  showToast('Signed out. Your notes stay on this device.', 'success');
-  showAuth(true);
-  setAuthMode('signin');
-}
-
-/* Asks the server who we are. Three possible outcomes, and they are NOT the same:
-     signed in     -> carry on
-     not signed in -> show the login screen
-     unreachable   -> carry on offline, never block the user from their own notes  */
-async function checkSession(){
-  try{
-    const res = await api('/api/me');
-    serverReachable = true;
-    if(res.ok){ account = await res.json(); return 'in'; }
-    return 'out';
-  }catch(e){
-    serverReachable = false;
-    return 'offline';
-  }
-}
-
-document.getElementById('authSubmit').addEventListener('click', submitAuth);
-['authUser','authPass','authInvite'].forEach(id => {
-  document.getElementById(id).addEventListener('keydown', e => {
-    if(e.key === 'Enter') submitAuth();
-  });
-});
-document.getElementById('authSkip').addEventListener('click', () => {
-  showAuth(false);
-  renderAccountBtn();
-});
-setAuthMode('signin');   // wire up the toggle link before the screen is ever shown
-
-document.getElementById('accountBtn').addEventListener('click', () => {
-  if(account){
-    if(confirm('Sign out of ' + account.username + '?\n\nYour notes stay saved on this device.')) signOut();
-  } else {
-    setAuthMode('signin');
-    showAuth(true);
-  }
-});
-
 /* ============================= Init ============================= */
 async function init(){
-  await loadState();          // local notes first -- they must always open
+  await loadState();
   showView('home');
   renderHome();
   renderStyleRow();
-
-  const status = await checkSession();
-  renderAccountBtn();
-  if(status === 'out') showAuth(true);
-  else if(status === 'offline') console.info('Server unreachable — working offline.');
 }
 init();
 
